@@ -40,6 +40,8 @@ use constant TRANSITION_FADEOUT   => 3;
 use constant TRANSITION_FADEINOUT => 4;
 use constant TRANSITION_CROSSFADE_IMMEDIATE => 5;
 
+use JSON;
+
 # We inherit new() completely from our parent class.
 
 sub modelName { 'Squeezebox' }
@@ -151,11 +153,47 @@ sub ticspersec {
 }
 
 sub play {
+	logError("play enter");
 	my $client = shift;
 	my $params = shift;
-
+	
 	my $controller = $params->{'controller'};
 	my $handler = $controller->currentTrackHandler();
+	
+
+	use URI::Encode qw(uri_encode uri_decode);
+	use Time::HiRes qw(usleep nanosleep);
+        my $decoded = uri_decode($params->{url});
+	$decoded =~ s/\&/\\&/g;
+	$decoded =~ s/\'/\\'/g;
+	$decoded =~ s/\s/\\ /g;
+	$decoded =~ s/\(/\\\(/g;
+	$decoded =~ s/\./\\./g;
+	$decoded =~ s/\)/\\\)/g;
+	$decoded =~ s/\?/\\?/g;
+	$decoded =~ s/file:\/\///g;
+	$decoded =~ s/youtube:\/\//https:\/\//g;
+
+	my $seekdata = 0;
+	my $seekd = $controller->song->seekdata;
+	if (defined $seekd && $seekd ne '') {
+		
+		my %seekd = %$seekd;
+		$seekdata = $seekd{timeOffset};
+	}
+	logError("decoded: $decoded");
+
+	my $gain = 6 + 0.6 * ($client->volume() - 100);
+	system("echo \"0\" > /home/gabor/Documents/.slimnotif");
+        my %rec_hash = ('command'=>"play", 'url'=>$params->{url}, 'skip'=>$seekdata,'volume'=>$gain);
+        my $json = encode_json \%rec_hash;
+        open(my $json_out, ">", '/home/gabor/Documents/play_command.json');
+        print {$json_out} $json;
+        logError("json done");
+	while (`cat /home/gabor/Documents/.slimnotif` != 1){
+		system("inotifywait /home/gabor/Documents/.slimnotif");
+	}
+	logError("squeezelite goes");
 
 	# Calculate the correct buffer threshold for remote URLs
 	if ( $handler->isRemote() ) {
@@ -183,11 +221,12 @@ sub play {
 
 	$client->bufferReady(0);
 
+
 	my $ret = $client->stream_s($params);
 
 	# make sure volume is set, without changing temp setting
 	$client->volume($client->volume(), defined($client->tempVolume()));
-
+	
 	return $ret;
 }
 
@@ -196,7 +235,6 @@ sub play {
 #
 sub pause {
 	my $client = shift;
-
 	$client->stream('p');
 	$client->playPoint(undef);
 	$client->SUPER::pause();
@@ -204,7 +242,18 @@ sub pause {
 }
 
 sub stop {
+	logError("stop called");
 	my $client = shift;
+	system("echo \"0\" > /home/gabor/Documents/.slimnotif");
+
+	my %rec_hash = ('command'=>"stop");
+        my $json = encode_json \%rec_hash;
+        open(my $json_out, ">", '/home/gabor/Documents/play_command.json');
+        print {$json_out} $json;
+
+        while (`cat /home/gabor/Documents/.slimnotif` != 1){
+                system("inotifywait /home/gabor/Documents/.slimnotif");
+        }
 
 	$client->stream('q');
 	$client->playPoint(undef);
@@ -213,6 +262,7 @@ sub stop {
 	$client->streamingsocket(undef);
 	$client->readyToStream(1);
 	$client->SUPER::stop();
+	logError("stop function returns");
 }
 
 sub bufferFullness {
@@ -787,7 +837,7 @@ sub stream_s {
 	# doesn't get an outdated fullness result
 	Slim::Networking::Slimproto::fullness( $client, 0 );
 
-	if ( $handler->isa('Slim::Player::Protocols::SqueezePlayDirect') ) {
+		if ( $handler->isa('Slim::Player::Protocols::SqueezePlayDirect') ) {
 
 		main::INFOLOG && logger('player.streaming.direct')->info("SqueezePlay direct stream: $url");
 
@@ -1052,7 +1102,7 @@ sub stream_s {
 	}
 
 	$client->sendFrame('strm', \$frame);
-
+	return 1;
 	$client->readyToStream(0);
 
 	if ($client->pitch() != 100) {
