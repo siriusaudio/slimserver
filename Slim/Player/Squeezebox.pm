@@ -184,14 +184,14 @@ sub play {
 	logError("decoded: $decoded");
 
 	my $gain = 6 + 0.6 * ($client->volume() - 100);
-	system("echo \"0\" > /home/gabor/Documents/.slimnotif");
+	system("echo \"0\" > /var/lib/squeezeboxserver/.slimnotif");
         my %rec_hash = ('command'=>"play", 'url'=>$params->{url}, 'skip'=>$seekdata,'volume'=>$gain);
         my $json = encode_json \%rec_hash;
-        open(my $json_out, ">", '/home/gabor/Documents/play_command.json');
+        open(my $json_out, ">", '/var/lib/squeezeboxserver/play_command.json');
         print {$json_out} $json;
         logError("json done");
-	while (`cat /home/gabor/Documents/.slimnotif` != 1){
-		system("inotifywait /home/gabor/Documents/.slimnotif");
+	while (`cat /var/lib/squeezeboxserver/.slimnotif` != 1){
+		system("inotifywait /var/lib/squeezeboxserver/.slimnotif");
 	}
 	logError("squeezelite goes");
 
@@ -244,15 +244,15 @@ sub pause {
 sub stop {
 	logError("stop called");
 	my $client = shift;
-	system("echo \"0\" > /home/gabor/Documents/.slimnotif");
+	system("echo \"0\" > /var/lib/squeezeboxserver/.slimnotif");
 
 	my %rec_hash = ('command'=>"stop");
         my $json = encode_json \%rec_hash;
-        open(my $json_out, ">", '/home/gabor/Documents/play_command.json');
+        open(my $json_out, ">", '/var/lib/squeezeboxserver/play_command.json');
         print {$json_out} $json;
 
-        while (`cat /home/gabor/Documents/.slimnotif` != 1){
-                system("inotifywait /home/gabor/Documents/.slimnotif");
+        while (`cat /var/lib/squeezeboxserver/.slimnotif` != 1){
+                system("inotifywait /var/lib/squeezeboxserver/.slimnotif");
         }
 
 	$client->stream('q');
