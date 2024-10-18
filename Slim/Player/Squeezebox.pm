@@ -190,8 +190,8 @@ sub play {
         open(my $json_out, ">", '/var/lib/squeezeboxserver/play_command.json');
         print {$json_out} $json;
         logError("json done");
-	while (`cat /var/lib/squeezeboxserver/.slimnotif` != 1){
-		system("inotifywait /var/lib/squeezeboxserver/.slimnotif");
+	if (`cat /var/lib/squeezeboxserver/.slimnotif` != 1){
+		system("inotifywait -t 10 /var/lib/squeezeboxserver/.slimnotif");
 	}
 	logError("squeezelite goes");
 
@@ -251,9 +251,9 @@ sub stop {
         open(my $json_out, ">", '/var/lib/squeezeboxserver/play_command.json');
         print {$json_out} $json;
 
-        while (`cat /var/lib/squeezeboxserver/.slimnotif` != 1){
-                system("inotifywait /var/lib/squeezeboxserver/.slimnotif");
-        }
+	if (`cat /var/lib/squeezeboxserver/.slimnotif` != 1){
+		system("inotifywait -t 10 /var/lib/squeezeboxserver/.slimnotif");
+	}
 
 	$client->stream('q');
 	$client->playPoint(undef);

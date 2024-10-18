@@ -780,6 +780,8 @@ sub parseFlacHeader {
 		Slim::Music::Info::setBitrate( $track, $bitrate );
 		Slim::Music::Info::setDuration( $track, $info->{song_length_ms} / 1000 );
 
+		system("echo $info->{song_length_ms} > /var/lib/squeezeboxserver/tracklength");
+
 		# we have valid header, means there will be no alignment unless we seek
 		$track->processors('flc', Slim::Schema::RemoteTrack::INITIAL_BLOCK_ONSEEK, \&Slim::Formats::FLAC::initiateFrameAlign);
 	} else {
