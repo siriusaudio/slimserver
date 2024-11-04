@@ -295,7 +295,11 @@ END %]
 [% END %]
 
 [% BLOCK albuminfo %]
-	<a [% PROCESS albumItemHRef %] target="browser" class="browseItemLink">[% item.text | html %]</a>
+	[% IF item.albumId || item.itemobj.album.id %]
+		<a [% PROCESS albumItemHRef %] target="browser" class="browseItemLink">[% item.text | html %]</a>
+	[% ELSE %]
+		[% item.text | html %]
+	[% END %]
 
 	[% IF item.showYear %]
 		<a [% PROCESS yearItemHRef %] class="browseItemLink">([% item.year %])</a>
@@ -304,9 +308,19 @@ END %]
 	[% IF item.includeArtist && (artist = item.artistsWithAttributes ? item.artistsWithAttributes.0 : item.itemobj.artist) && artist.name != item.noArtist; PROCESS artistsAsHTML.html itemobj = item.itemobj; END %]
 [% END %]
 
+[% BLOCK workinfo %]
+	[% IF item.workId || item.itemobj.work.id %]
+		<a [% PROCESS workItemHRef %] target="browser" class="browseItemLink">[% item.text | html %]</a>
+	[% ELSE %]
+		[% item.text | html %]
+	[% END %]
+[% END %]
+
 [% BLOCK iteminfo;
 	IF item.levelName == 'album';
 		PROCESS albuminfo;
+	ELSIF item.levelName == 'work';
+		PROCESS workinfo;
 	ELSE;
 		PROCESS trackinfo;
 END; END %]

@@ -23,6 +23,8 @@ on:
 jobs:
   macLegacy:
     name: Build LMS for Mac (Legacy)
+    # disable - no longer provided starting LMS9
+    if: false
     runs-on: self-hosted
     timeout-minutes: 20
     env:
@@ -46,7 +48,7 @@ jobs:
 
   mac:
     name: Build LMS for Mac (MenuBar Item)
-    runs-on: macos-12
+    runs-on: macos-13
     steps:
       # we must check out here, as  otherwise the build action is not available
       - name: Check out LMS code
@@ -176,7 +178,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 2
     needs:
-      - macLegacy
+      # - macLegacy
       - mac
       - linux
       - win64

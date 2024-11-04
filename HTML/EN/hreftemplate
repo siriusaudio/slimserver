@@ -146,6 +146,11 @@ this should be identical to the URL args supplied in cmdHRef plus ajaxRequest=1 
 href="[% webroot %]clixmlbrowser/clicmd=browselibrary+items&amp;mode=tracks&amp;linktitle=[% stringALBUM %]%20([% (item.albumTitle || item.itemobj.album.id) | uri %])&amp;album_id=[% (item.albumId || item.itemobj.album.id) %]&amp;player=[% playerURI %]/"
 [%- END %]
 
+[%# this is the href to the work of item %]
+[% BLOCK workItemHRef -%]
+href="[% webroot %]clixmlbrowser/clicmd=browselibrary+items&amp;mode=albums&amp;linktitle=[% stringWORK %]%20([% (item.text || item.itemobj.work.id) | uri %])&amp;work_id=[% (item.workId || item.itemobj.work.id) %]&amp;player=[% playerURI %]/"
+[%- END %]
+
 [%# this is the href to the year of item %]
 [% BLOCK yearItemHRef -%]
 href="[% webroot %]clixmlbrowser/clicmd=browselibrary+items&amp;mode=albums&amp;linktitle=[% stringYEAR %]%20([% item.year %])&amp;year=[% item.year %][% IF artwork || artwork == 0 %]&amp;artwork=[% artwork %][% END %]&amp;player=[% playerURI %]/"

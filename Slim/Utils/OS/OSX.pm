@@ -81,6 +81,8 @@ sub initDetails {
 		eval 'mkpath("$ENV{\'HOME\'}/$dir");';
 	}
 
+	unshift @INC, $ENV{'HOME'} . "/Library/Application Support/Squeezebox";
+
 	return $class->{osDetails};
 }
 
@@ -363,13 +365,10 @@ sub getDefaultGateway {
 my $updateCheckInitialized;
 my $plistLabel = "com.slimdevices.updatecheck";
 
-sub initUpdate { if (!IS_MENUBAR_ITEM) {
+sub initUpdate {
 	return if $updateCheckInitialized;
 
 	my $log = Slim::Utils::Log::logger('server.update');
-	$log->error(IS_MENUBAR_ITEM ? 'menu item' : 'nope');
-
-	return if IS_MENUBAR_ITEM;
 
 	my $err = "Failed to install LaunchAgent for the update checker";
 
@@ -386,6 +385,20 @@ sub initUpdate { if (!IS_MENUBAR_ITEM) {
 		require File::Basename;
 		my $folder = File::Basename::dirname($script);
 
+		my $envVariables;
+		if (IS_MENUBAR_ITEM) {
+			$envVariables = sprintf(q(
+				<key>EnvironmentVariables</key>
+				<dict>
+					<key>LMS_NOTIFICATION_TITLE</key>
+					<string>%s</string>
+					<key>LMS_NOTIFICATION_CONTENT</key>
+					<string>%s</string>
+				</dict>
+			), Slim::Utils::Strings::string('SQUEEZEBOX_SERVER'), Slim::Utils::Strings::string('CONTROLPANEL_UPDATE_AVAILABLE'));
+			utf8::decode($envVariables);
+		}
+
 		print UPDATE_CHECKER qq(<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -396,6 +409,7 @@ sub initUpdate { if (!IS_MENUBAR_ITEM) {
 	<array>
 		<string>$script</string>
 	</array>
+	$envVariables
 	<key>RunAtLoad</key>
 	<true/>
 	<key>WorkingDirectory</key>
@@ -427,16 +441,16 @@ sub initUpdate { if (!IS_MENUBAR_ITEM) {
 		unlink($launcherPlist);
 		$updateCheckInitialized = 0;
 	}, 'checkVersion' );
-} }
+}
 
 sub getUpdateParams {
 	return {
-		cb => sub { if (!IS_MENUBAR_ITEM) {
+		cb => sub {
 			# let's kick the update checker
 			if ( my $err = `launchctl start $plistLabel` ) {
 				Slim::Utils::Log::logger('server.update')->error($err);
 			}
-		} }
+		}
 	};
 }
 
@@ -451,7 +465,7 @@ sub installerExtension {
 	if (IS_MENUBAR_ITEM) {
 		# remove pref pane installer
 		Slim::Utils::Misc::deleteFiles($updateFolder, qr/^LyrionMusicServer.*\.pkg$/i);
-		return 'zip';
+		return 'dmg';
 	};
 
 	# remove menu bar item installer

@@ -1101,15 +1101,7 @@ sub _artists {
 			} @roles  if @roles;
 
 			if ( $mode && $mode eq 'artists' ) {
-				push @roles, 'ARTIST', 'TRACKARTIST', 'ALBUMARTIST';
-
-				# Loop through each pref to see if the user wants to show that contributor role.
-				foreach (Slim::Schema::Contributor->contributorRoles) {
-					if (_getPref(lc($_) . 'InArtists', $remote_library)) {
-						push @roles, $_;
-					}
-				}
-
+				push @roles, Slim::Schema::Contributor->activeContributorRoles(1);
 				push @ptSearchTags, 'role_id:' . join(',', @roles);
 			}
 		}
@@ -1533,7 +1525,7 @@ sub _albums {
 				}
 				else {
 					$_->{'artists'}    = [ $_->{'artist'} ];
-					$_->{'artist_ids'} = [ $_->{'id'} ];
+					$_->{'artist_ids'} = [ $_->{'artist_id'} ];
 				}
 
 				# If an artist was not used in the selection criteria or if one was
@@ -1832,7 +1824,9 @@ sub _tracks {
 			my $items   = $results->{'titles_loop'};
 			$remote_library ||= $args->{'remote_library'};
 
+			my $trackIds;
 			foreach (@$items) {
+				$trackIds .= $_->{'id'} . ',';
 				# Map a few items that get different tags to those expected for TitleFormatter
 				# Currently missing composer, conductor, band because of additional cost of 'A' tag query
 				$_->{'ct'}            = $_->{'type'};
@@ -1947,6 +1941,7 @@ sub _tracks {
 					sort       => 'albumtrack',
 					menuStyle  => 'menuStyle:allSongs',
 					search     => 'sql=' . $sql,
+					track_id   => $trackIds,
 				);
 
 				my %allSongsActions = (

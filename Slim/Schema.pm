@@ -1528,9 +1528,11 @@ sub _createTrack {
 			$columnValueHash->{urlmd5},
 		);
 
+		my $externalTrack = $columnValueHash->{extid} && $columnValueHash->{url} eq $columnValueHash->{extid};
+
 		# retrievePersistent will always return undef or a track metadata object
 		if ( !$trackPersistentHash ) {
-			$persistentColumnValueHash->{added}  = time();
+			$persistentColumnValueHash->{added}  = ($externalTrack && $columnValueHash->{timestamp}) || time();
 			$persistentColumnValueHash->{url}    = $columnValueHash->{url};
 			$persistentColumnValueHash->{urlmd5} = $columnValueHash->{urlmd5};
 
@@ -1551,6 +1553,10 @@ sub _createTrack {
 			# Always update url/urlmd5 as these values may have changed if we looked up using musicbrainz_id
 			$trackPersistentHash->{url}    = $columnValueHash->{url};
 			$trackPersistentHash->{urlmd5} = $columnValueHash->{urlmd5};
+
+			if ($externalTrack && $columnValueHash->{timestamp}) {
+				$trackPersistentHash->{added} = $columnValueHash->{timestamp}
+			}
 
 			$self->_updateHash( tracks_persistent => $trackPersistentHash, 'id' );
 		}
@@ -2347,7 +2353,7 @@ sub artistOnlyRoles {
 
 	# And if the user has asked for ALL, give them it.
 	if ($roles{'ALL'}) {
-		return undef;
+		return [ Slim::Schema::Contributor->contributorRoleIds ];
 	}
 
 	# Loop through each pref to see if the user wants to show that contributor role.
@@ -2359,13 +2365,8 @@ sub artistOnlyRoles {
 		}
 	}
 
-	# If we're using all roles, don't bother with the constraint.
-	if (scalar keys %roles != Slim::Schema::Contributor->totalContributorRoles) {
+	return [ sort map { Slim::Schema::Contributor->typeToRole($_) } keys %roles ];
 
-		return [ sort map { Slim::Schema::Contributor->typeToRole($_) } keys %roles ];
-	}
-
-	return undef;
 }
 
 sub registerRatingImplementation {

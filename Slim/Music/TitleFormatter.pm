@@ -86,6 +86,20 @@ sub init {
 		return (defined $output ? $output : '');
 	};
 
+	# Override work
+	$parsedFormats{'WORK'} = sub {
+
+		if ( ref $_[0] eq 'HASH' ) {
+			return $_[0]->{work} || $_[0]->{'works.title'} || '';
+		}
+
+		my $output = '';
+		$output = $_[0]->worktitle();
+		$output = '' if !defined($output);
+
+		return (defined $output ? $output : '');
+	};
+
 	# add album related
 	$parsedFormats{'ALBUMSORT'} = sub {
 

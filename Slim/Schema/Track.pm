@@ -48,7 +48,7 @@ our @allColumns = (qw(
 	# setup our relationships
 	$class->belongs_to('album' => 'Slim::Schema::Album');
 	$class->belongs_to('primary_artist'  => 'Slim::Schema::Contributor');
-	$class->belongs_to('work' => 'Slim::Schema::Work');
+	$class->belongs_to('work' => 'Slim::Schema::Work', 'work', { join_type => 'left' });
 
 	$class->has_many('genreTracks'       => 'Slim::Schema::GenreTrack' => 'track');
 	$class->has_many('comments'          => 'Slim::Schema::Comment'    => 'track');
@@ -86,10 +86,6 @@ sub namesort {
 
 sub namesearch {
 	return shift->titlesearch;
-}
-
-sub work {
-	return shift->work;
 }
 
 sub workid {

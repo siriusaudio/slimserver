@@ -4,7 +4,7 @@ package Slim::Schema::Contributor;
 use strict;
 use base 'Slim::Schema::DBI';
 
-use Scalar::Util qw(blessed);
+use List::Util qw(max);
 
 use Slim::Schema::ResultSet::Contributor;
 
@@ -12,11 +12,15 @@ use Slim::Utils::Log;
 use Slim::Utils::Misc;
 use Slim::Utils::Prefs;
 
+use constant MIN_CUSTOM_ROLE_ID => 21;
+
 my %contributorToRoleMap;
 my @contributorRoles;
 my @contributorRoleIds;
 my $totalContributorRoles;
 my %roleToContributorMap;
+
+my $prefs = preferences('server');
 
 initializeRoles();
 
@@ -66,11 +70,9 @@ sub initializeRoles {
 		'ALBUMARTIST' => 5,
 		'TRACKARTIST' => 6,
 	);
-	my $prefs = preferences('server');
-	if ( my $userDefinedRoles = $prefs->get('userDefinedRoles') ) {
-		while ( my($k, $v) = each (%$userDefinedRoles) ) {
-			$contributorToRoleMap{$k} = $v->{id};
-		}
+
+	while ( my ($k, $v) = each %{ $prefs->get('userDefinedRoles') } ) {
+		$contributorToRoleMap{$k} ||= $v->{id};
 	}
 
 	@contributorRoles = sort keys %contributorToRoleMap;
@@ -81,6 +83,58 @@ sub initializeRoles {
 
 sub contributorRoles {
 	return @contributorRoles;
+}
+
+sub isDefaultContributorRole {
+	my $class = shift;
+	my $role = shift;
+
+	return $class->typeToRole($role) < MIN_CUSTOM_ROLE_ID;
+}
+
+sub defaultContributorRoles {
+	return grep { __PACKAGE__->isDefaultContributorRole($_) } contributorRoles();
+}
+
+sub splitDefaultAndCustomRoles {
+	my $class = shift;
+	my $roles = shift;
+
+	my @roles = split(',', $roles || '');
+	my @defaultRoles;
+	my @userDefinedRoles;
+
+	foreach my $role (@roles) {
+		if ( __PACKAGE__->isDefaultContributorRole($role) ) {
+			push @defaultRoles, $role;
+		} else {
+			push @userDefinedRoles, $role;
+		}
+	}
+	return (join(',', @defaultRoles), join(',', @userDefinedRoles));
+}
+
+sub userDefinedRoles {
+	my $class = shift;
+	my $activeOnly = shift;
+
+	# de-reference the pref so we don't accidentally change it below
+	my %udr = %{$prefs->get('userDefinedRoles')};
+	return grep { $activeOnly ? $udr{$_}->{include} : $udr{$_} } contributorRoles();
+}
+
+sub activeContributorRoles {
+	my $class = shift;
+	my $includeTrackArtist = shift;
+
+	my @roles = ( 'ARTIST', 'ALBUMARTIST' );
+	push @roles, 'TRACKARTIST' if $includeTrackArtist && !$prefs->get('trackartistInArtists');
+
+	# Loop through each pref to see if the user wants to show that contributor role. Also include user-defined roles.
+	push @roles, grep { $prefs->get(lc($_) . 'InArtists') } contributorRoles();
+	push @roles, __PACKAGE__->userDefinedRoles(1);
+
+	return grep { $_ } @roles;
 }
 
 sub contributorRoleIds {
@@ -101,6 +155,10 @@ sub typeToRole {
 
 sub roleToType {
 	return $roleToContributorMap{$_[1]};
+}
+
+sub getMinCustomRoleId {
+	return max(MIN_CUSTOM_ROLE_ID, max(contributorRoleIds()) + 1);
 }
 
 sub extIds {

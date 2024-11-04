@@ -10,11 +10,16 @@ use strict;
 
 use File::Spec::Functions qw(catdir);
 use FindBin qw($Bin);
+use IO::Socket::IP;
 use Win32::Daemon;
 
 use base qw(Slim::Utils::OS::Win32);
 
 use constant RESTART_STATUS => 42;
+
+# Make sure we use the ipv4 stack in LWP::UserAgent
+# https://github.com/libwww-perl/libwww-perl/issues/345
+@LWP::Protocol::http::EXTRA_SOCK_OPTS = ( Family => AF_INET );
 
 my $log;
 

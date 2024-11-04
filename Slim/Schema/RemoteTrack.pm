@@ -193,6 +193,8 @@ sub DESTROY {
 *playcount = \&Slim::Schema::Track::playcount;
 *rating = \&Slim::Schema::Track::rating;
 *lastplayed = \&Slim::Schema::Track::lastplayed;
+*workid = \&Slim::Schema::Track::workid;
+*worktitle = \&Slim::Schema::Track::worktitle;
 
 sub displayAsHTML {
 	my ($self, $form, $descend, $sort) = @_;
