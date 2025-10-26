@@ -1,5 +1,5 @@
-name: Build Logitech Media Server
-description: Build Logitech Media Server with the given parameters
+name: Build Lyrion Music Server
+description: Build Lyrion Music Server with the given parameters
 inputs:
   build-params:
     description: Parameters needed to run the `buildme.pl` script
@@ -9,8 +9,6 @@ inputs:
     description: "`nightly` or `release`"
     required: true
     default: nightly
-  ssh-connect-string:
-    description: Connection string to be used to to connect to the locally run build host.
   AWS_KEY_ID:
     description: The key ID to use to upload to S3
   AWS_SECRET_ACCESS_KEY:
@@ -23,20 +21,31 @@ runs:
       shell: bash
       id: getversion
       run: |
-        MAJOR=$(grep "\$VERSION" server/slimserver.pl | head -n1 | cut -d"'" -f2 | cut -d. -f1)
-        MINOR=$(grep "\$VERSION" server/slimserver.pl | head -n1 | cut -d"'" -f2 | cut -d. -f2)
+        echo "::group::Get LMS version number"
+        MAJOR=$(grep "our \$VERSION" -m1 server/slimserver.pl | cut -d"'" -f2 | cut -d. -f1)
+        MINOR=$(grep "our \$VERSION" -m1 server/slimserver.pl | cut -d"'" -f2 | cut -d. -f2)
+        PATCH=$(grep "our \$VERSION" -m1 server/slimserver.pl | cut -d"'" -f2 | cut -d. -f3)
 
         echo "LMS_VERSION=$MAJOR.$MINOR" >> $GITHUB_OUTPUT
+        echo "LMS_FULL_VERSION=$MAJOR.$MINOR.$PATCH" >> $GITHUB_OUTPUT
         echo "GIT_BRANCH=public/$MAJOR.$MINOR" >> $GITHUB_OUTPUT
+        echo "::endgroup::"
 
 
     - name: Check out LMS platform code
       uses: actions/checkout@v4
       with:
-        repository: Logitech/slimserver-platforms
+        repository: ${{ github.repository_owner }}/slimserver-platforms
         path: platforms
         ref: ${{ steps.getversion.outputs.GIT_BRANCH }}
 
+
+    - name: Check out pCP platform code
+      if: ${{ startsWith(inputs.build-params, 'pcp') }}
+      uses: actions/checkout@v4
+      with:
+        repository: picoreplayer/lms-update-script
+        path: platforms/pcp
 
     - name: Set up Docker environment
       if: ${{ startsWith(inputs.build-params, 'docker') }}
@@ -45,11 +54,11 @@ runs:
       # TODO - needs to be smarter!
       run: |
         if [ "${{ inputs.build-type }}" = "release" ]; then
-          echo "LMS_TAG=--tag=latest" >> $GITHUB_OUTPUT
+          echo "LMS_TAG=--tag=rc" >> $GITHUB_OUTPUT
+        elif [ "${{ steps.getversion.outputs.LMS_VERSION }}" = "9.1" ]; then
+          echo "LMS_TAG=--tag=dev,${{ steps.getversion.outputs.LMS_FULL_VERSION }}-dev" >> $GITHUB_OUTPUT
         elif [ "${{ steps.getversion.outputs.LMS_VERSION }}" = "9.0" ]; then
-          echo "LMS_TAG=--tag=dev" >> $GITHUB_OUTPUT
-        elif [ "${{ steps.getversion.outputs.LMS_VERSION }}" = "8.5" ]; then
-          echo "LMS_TAG=--tag=stable" >> $GITHUB_OUTPUT
+          echo "LMS_TAG=--tag=stable,${{ steps.getversion.outputs.LMS_FULL_VERSION }}-stable" >> $GITHUB_OUTPUT
         else
           echo "UNKNOWN DOCKER TARGET TAG"
           exit 1
@@ -60,6 +69,7 @@ runs:
       if: ${{ inputs.build-params == 'macos' }}
       shell: bash
       run: |
+        echo "::group::Set up macOS environment"
         # set up Platypus - see https://github.com/sveinbjornt/Platypus/issues/270#issuecomment-2312235079
         echo "Creating directory structures"
         mkdir -p /usr/local/bin || echo $?
@@ -74,33 +84,22 @@ runs:
         echo "Installing command line tool"
         sudo cp -nf platypus /usr/local/bin
         sudo chmod +x /usr/local/bin/platypus
+        echo "::endgroup::"
 
 
     - name: Set up Windows environment
       if: ${{ startsWith(inputs.build-params, 'win64') }}
       shell: bash
       run: |
+        echo "::group::Set up Windows environment"
         cp -nf platforms/win32/tools/* 'c:\Program Files\Git\usr\bin\'
-
-
-    - name: Build ${{ inputs.build-params }} package on ${{ runner.os }} (self-hosted runner)
-      if: ${{ inputs.ssh-connect-string != '' }}
-      shell: bash
-      run: |
-        ssh ${{ inputs.ssh-connect-string }} "mkdir -p $BASEDIR; rm -rf $BASEDIR/publish"
-        rsync -a --delete server platforms ${{ inputs.ssh-connect-string }}:$BASEDIR/
-
-        ssh ${{ inputs.ssh-connect-string }} "cd $BASEDIR && platforms/buildme.pl --build ${{ inputs.build-params }} --buildDir \$(pwd)/work --sourceDir \$(pwd) --destDir \$(pwd)/publish --releaseType ${{ inputs.build-type }}"
-
-        rm -rf publish
-        mkdir -p publish
-        scp ${{ inputs.ssh-connect-string }}:$BASEDIR/publish/* publish/
+        echo "::endgroup::"
 
 
     - name: Build ${{ inputs.build-params }} package on ${{ runner.os }}
-      if: ${{ inputs.ssh-connect-string == '' }}
       shell: bash
       run: |
+        echo "::group::Build ${{ inputs.build-params }} package on ${{ runner.os }}"
         SRC_PATH=$PWD
 
         BUILD_PATH=$SRC_PATH/work
@@ -110,32 +109,45 @@ runs:
         mkdir -p $DEST_PATH
 
         platforms/buildme.pl --build ${{ inputs.build-params }} ${{ steps.dockersetup.outputs.LMS_TAG }} --buildDir $BUILD_PATH --sourceDir $SRC_PATH --destDir $DEST_PATH --releaseType ${{ inputs.build-type }}
+        echo "::endgroup::"
 
     - name: Verify results
       if: ${{ !startsWith(inputs.build-params, 'docker') }}
       shell: bash
       run: |
-        if [ ! -f publish/* ]; then
+        if [ ! "$(ls -A publish/)" ]; then
           exit 1;
         fi
 
-    - name: Upload artifacts to R2
-      if: ${{ !startsWith(inputs.build-params, 'docker') }}
+    - name: Cache s5cmd
+      uses: actions/cache@v4
+      with:
+        key: s5cmd-${{ runner.os }}
+        path: ${{ runner.temp }}/s5cmd-bin
+
+    - name: Check if s5cmd is installed
+      id: check-s5cmd
+      continue-on-error: true
       shell: bash
       run: |
-        mkdir -p $HOME/.aws
-        echo "[downloads]" > $HOME/.aws/credentials
-        # region is irrelevant for Cloudflare R2, but required by the aws CLI tool
-        echo "region=us-east-1" >> $HOME/.aws/credentials
-        echo "aws_access_key_id=${{ inputs.AWS_KEY_ID }}" >> $HOME/.aws/credentials
-        echo "aws_secret_access_key=${{ inputs.AWS_SECRET_ACCESS_KEY }}" >> $HOME/.aws/credentials
+        PATH="${{ runner.temp }}/s5cmd-bin:$PATH"
+        if command -v s5cmd &> /dev/null; then
+          echo "s5cmd is already installed"
+          echo "installed=true" >> $GITHUB_OUTPUT
+          echo "${{ runner.temp }}/s5cmd-bin" >> $GITHUB_PATH
+        else
+          echo "s5cmd is not installed"
+          echo "installed=false" >> $GITHUB_OUTPUT
+        fi
 
-        for f in publish/?yrion?usic?erver*;
-        do
-          aws --profile downloads --endpoint-url https://e83bc03c881257fada7ca16c243e9298.eu.r2.cloudflarestorage.com s3 cp $f s3://downloads/${{ inputs.build-type }}/
-        done
-
-        rm -f $HOME/.aws/credentials
+    - name: Set-up s5cmd
+      if: ${{ !startsWith(inputs.build-params, 'docker') && steps.check-s5cmd.outputs.installed != 'true' }}
+      # don't fail, as we can fall back to aws-cli
+      continue-on-error: true
+      uses: ./server/.github/actions/setup-s5cmd
+      # uses: peak/action-setup-s5cmd@main
+      with:
+        version: v2.3.0
 
     - name: Archive artifacts
       if: ${{ !startsWith(inputs.build-params, 'docker') }}
@@ -143,3 +155,30 @@ runs:
       with:
         name: ${{ inputs.build-params }}
         path: publish
+
+    - name: Upload artifacts to R2
+      if: ${{ !startsWith(inputs.build-params, 'docker') && github.repository_owner == 'LMS-Community' }}
+      shell: bash
+      env:
+        AWS_ACCESS_KEY_ID: ${{ inputs.AWS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: us-east-1
+      run: |
+        echo "::group::Upload artifacts to R2"
+        TARGET_FOLDER="${{ inputs.build-type }}"
+
+        if [ "${{ inputs.build-type }}" = "release" ]; then
+          TARGET_FOLDER="LyrionMusicServer_v${{ steps.getversion.outputs.LMS_FULL_VERSION }}"
+        fi
+
+        ENDPOINT_URL="https://e83bc03c881257fada7ca16c243e9298.eu.r2.cloudflarestorage.com"
+        S3_CMD="aws --endpoint-url $ENDPOINT_URL s3"
+        if command -v s5cmd 2>&1 >/dev/null; then
+          S3_CMD="s5cmd --endpoint-url $ENDPOINT_URL"
+        fi
+
+        for f in publish/?yrion?usic?erver*;
+        do
+          $S3_CMD cp $f s3://downloads/$TARGET_FOLDER/
+        done
+        echo "::endgroup::"

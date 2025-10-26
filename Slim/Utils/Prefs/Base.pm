@@ -92,7 +92,7 @@ sub set {
 	my $namespace = $root->{'namespace'};
 	my $clientid  = $class->{'clientid'} || '';
 
-	if (!ref $new && defined $new && defined $old && $new eq $old) {
+	if ( (!defined $new && !defined $old) || (!ref $new && defined $new && defined $old && $new eq $old) ) {
 		# suppress set when scalar and no change
 		return wantarray ? ($new, 1) : $new;
 	}

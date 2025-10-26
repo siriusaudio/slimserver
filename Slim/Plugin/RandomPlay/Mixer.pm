@@ -114,7 +114,7 @@ sub getIdList {
 		# it's messy reaching that far in to Slim::Control::Queries, but it's >5x faster on a Raspberry Pi2 with 100k tracks than running the full "titles" query
 		my $results;
 		($results, $idList) = Slim::Control::Queries::_getTagDataForTracks( 'II', {
-			where     => '(tracks.content_type != "cpl" AND tracks.content_type != "src" AND tracks.content_type != "ssp" AND tracks.content_type != "dir")',
+			where     => '(tracks.audio = 1 AND tracks.content_type NOT IN ("cpl", "src", "ssp", "dir"))',
 			year      => $type eq 'year' && getRandomYear($client, $filteredGenres),
 			genreId   => $queryGenres,
 			libraryId => $queryLibrary,

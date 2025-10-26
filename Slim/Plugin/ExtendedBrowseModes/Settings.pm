@@ -51,44 +51,6 @@ sub handler {
 
 	# if we're called from the client prefs, we've already saved the client prefs
 	if ($params->{'saveSettings'} && !$class->needsClient) {
-		# custom role handling
-		my $currentRoles = $serverPrefs->get('userDefinedRoles');
-		my $customRoleId = Slim::Schema::Contributor->getMinCustomRoleId();
-
-		my $customTags = {};
-		my $changed = 0;
-
-		foreach my $pref (keys %{$params}) {
-			if ($pref =~ /(.*)_tag$/) {
-				my $key = $1;
-				my $tag = uc($params->{$pref});
-
-				if ( $tag ) {
-					$customTags->{$tag} = {
-						name => $params->{$key . '_name'} || $tag,
-						id => $currentRoles->{$tag} ? $currentRoles->{$tag}->{id} : $customRoleId++,
-						include => $params->{$key . '_include'},
-					};
-
-					if ( !$currentRoles->{$tag} || $currentRoles->{$tag}->{name} ne $customTags->{$tag}->{name}
-						|| $currentRoles->{$tag}->{include} ne $customTags->{$tag}->{include}
-					) {
-						Slim::Utils::Strings::storeExtraStrings([{
-							strings => { EN => $customTags->{$tag}->{name}},
-							token   => $tag,
-						}]);
-						$changed = 1;
-					}
-				}
-			}
-		}
-
-		# set changed flag if we removed an item from the list
-		$changed ||= grep { !$customTags->{$_} } keys %$currentRoles;
-
-		if ( $changed ) {
-			$serverPrefs->set('userDefinedRoles', $customTags);
-		}
 
 		# browse menu handling
 		my $menus = $prefs->get('additionalMenuItems');
@@ -216,7 +178,6 @@ sub beforeRender {
 	$params->{genre_list} = [ sort map { $_->name } Slim::Schema->search('Genre')->all ];
 	$params->{roles} = [ Slim::Schema::Contributor->contributorRoles ];
 	$params->{release_types} = Slim::Schema::Album->releaseTypes;
-	$params->{customTags} = $serverPrefs->get('userDefinedRoles');
 	$params->{libraries} = {};
 
 	if ($params->{'needsAudioBookUpdate'}) {

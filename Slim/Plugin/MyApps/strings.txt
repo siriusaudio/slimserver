@@ -16,6 +16,7 @@ PLUGIN_MY_APPS_MODULE_NAME
 
 PLUGIN_MY_APPS_NO_APPS
 	CS	Žádná nainstalovaná aplikace
+	DA	Ingen programmer installeret
 	DE	Keine Anwendung installiert
 	EN	No App installed
 	FR	Aucune application n'est installée

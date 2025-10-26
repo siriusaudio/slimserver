@@ -75,6 +75,7 @@ sub parseAdvancedSearchParams {
 	my ($client, $params) = @_;
 
 	$params->{_dontRenderPage} = 1;
+
 	return advancedSearch($client, $params);
 }
 
@@ -285,7 +286,7 @@ sub advancedSearch {
 	my $prefix = Slim::Music::Import->lastScanTime() . '_advSearch_';
 
 	if ( !($params->{'fileTypes'} = $cache->get($prefix . 'ctList')) ) {
-		foreach my $ct ( @{ $dbh->selectcol_arrayref('SELECT DISTINCT content_type FROM tracks WHERE audio = 1 AND tracks.content_type != "cpl" AND tracks.content_type != "src" AND tracks.content_type != "ssp" AND tracks.content_type != "dir"') } ) {
+		foreach my $ct ( @{ $dbh->selectcol_arrayref('SELECT DISTINCT content_type FROM tracks WHERE audio = 1 AND tracks.content_type NOT IN ("cpl", "src", "ssp", "dir")') } ) {
 			$params->{'fileTypes'} ||= {};
 			$params->{'fileTypes'}->{lc($ct)} = string(uc($ct));
 		}
@@ -467,11 +468,14 @@ sub advancedSearch {
 	if ( $type =~ /Work/ ) {
 		my %workAttrs = (
 			'order_by' => "composer.namesort, me.titlesort $collate",
-			'join' => 'composer',
-		) if !$dontRenderPage;
+			'join' => ['composer','track'],
+			'columns' => ['me.id', 'me.composer', 'me.title', 'me.titlesort', 'me.titlesearch', { albumId => { 'group_concat' => 'DISTINCT track.album' } }],
+			'group_by' => ['me.id'],
+		);
 
 		$workRs = Slim::Schema->search('Work', {
 			'me.id' => { 'in' => $tracksRs->get_column('work')->as_query },
+			'track.album' => { 'in' => $tracksRs->get_column('album')->as_query },
 		}, \%workAttrs);
 	}
 

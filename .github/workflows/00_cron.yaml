@@ -2,28 +2,34 @@ name: Build LMS Scheduler
 on:
   workflow_dispatch:
   schedule:
-    - cron:  '40 2 * * *'
+    - cron:  '40 2,3,4 * * *'
 
 jobs:
   check:
     name: Check whether build is needed
+    if: ${{ github.repository_owner == 'LMS-Community' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/github-script@v7
         with:
           script: |
-            const repoStatus = await github.request('GET https://lms-community.github.io/lms-server-repository/servers.json');
+            const repoStatus = await github.request('GET https://raw.githubusercontent.com/LMS-Community/lms-server-repository/refs/heads/master/servers.json');
 
             if (repoStatus.status !== 200) {
+              console.error("Fetching repo file failed?" + JSON.stringify(repoStatus, null, 2));
               return false;
             }
 
             // get the oldest timestamp for each version from previous builds
             const candidates = [];
-            Object.keys(repoStatus.data).forEach(version => {
+            const repoData = JSON.parse(repoStatus.data);
+
+            Object.keys(repoData).sort((a, b) => {
+              return 0.5 - Math.random();
+            }).forEach(version => {
               const matches = version.match(/(\d+\.\d+)\.\d+/);
               if (matches && matches.length == 2) {
-                const versionBuilds = repoStatus.data[version];
+                const versionBuilds = repoData[version];
                 candidates.push({
                   v: matches[1],
                   r: Object.keys(versionBuilds).reduce((accumulator, build) => {
@@ -34,7 +40,7 @@ jobs:
                 })
               }
               else {
-                delete repoStatus.data[version];
+                delete repoData[version];
               }
             });
 
@@ -67,11 +73,18 @@ jobs:
                   repo: context.repo.repo,
                   workflow_id: '00_build.yaml',
                   ref: 'public/' + candidates[i].v,
+                  inputs: {
+                    branch: 'public/' + candidates[i].v,
+                    build_type: 'nightly',
+                  },
                 });
 
                 if (workflowStatus.status < 200 || workflowStatus.status > 204) {
                   console.log(workflowStatus);
                 }
+
+                // we only want to run one build at a time - we'll re run the check in a bit
+                break;
               }
               else {
                 console.log(`${candidates[i].v}: is up to date (${candidates[i].r})`);

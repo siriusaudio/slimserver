@@ -1,6 +1,7 @@
 package Slim::Utils::Prefs;
 
-
+# Logitech Media Server Copyright 2001-2024 Logitech.
+# Lyrion Music Server Copyright 2025 Lyrion Community.
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License,
 # version 2.
@@ -194,7 +195,7 @@ sub init {
 		'ignoreReleaseTypes'    => 0,
 		'groupArtistAlbumsByReleaseType' => 0,
 		'showComposerReleasesbyAlbum' => 2,
-		'showComposerReleasesbyAlbumGenres' => "Classical, Klassik, Classique, Klassiek",
+		'myClassicalGenres' => $prefs->get("showComposerReleasesbyAlbumGenres") || "Classical, Klassik, Classique, Klassiek",
 		'ratingImplementation'  => 'LOCAL_RATING_STORAGE',
 		# Server Settings - FileTypes
 		'disabledextensionsaudio'    => '',
@@ -210,6 +211,7 @@ sub init {
 		'maxWMArate'            => 9999,
 		'tcpConnectMaximum'     => 30,             # not on web page
 		'udpChunkSize'          => 1400,           # only used for Slimp3
+		'maxRedirects'          => 7,
 		# Server Settings - Performance
 		'disableStatistics'     => 0,
 		'serverPriority'        => '',
@@ -229,7 +231,7 @@ sub init {
 		'authorize'             => 0,
 		'username'              => '',
 		'password'              => '',
-		'insecureHTTPS'         => main::ISWINDOWS ? 1 : 0,
+		'insecureHTTPS'         => 0,
 		# Server Settings - TextFormatting
 		'longdateFormat'        => q(%A, %B |%d, %Y),
 		'shortdateFormat'       => q(%m/%d/%Y),
@@ -260,6 +262,7 @@ sub init {
 		'refreshRate'           => 30,
 		'coverArt'              => '',
 		'artfolder'             => '',
+		'noContributorPictures' => 0,
 		'thumbSize'             => 100,
 		'useLocalImageproxy'    => main::ISWINDOWS ? 1 : 2,
 		# Server Settings - jive UI
@@ -268,6 +271,13 @@ sub init {
 		# Bug 5557, disable UPnP support by default
 		'noupnp'                => 1,
 		'onlyAlbumYears'        => 1,
+		'artistAlbumLink'       => 1,
+		'albumartistAlbumLink'  => 1,
+		'trackartistAlbumLink'  => $prefs->get('useUnifiedArtistsList') && $prefs->get('trackartistInArtists'),
+		'composerAlbumLink'     => $prefs->get('useUnifiedArtistsList') && $prefs->get('composerInArtists'),
+		'conductorAlbumLink'    => $prefs->get('useUnifiedArtistsList') && $prefs->get('conductorInArtists'),
+		'bandAlbumLink'         => $prefs->get('useUnifiedArtistsList') && $prefs->get('bandInArtists'),
+		'worksScan'             => $prefs->get("showComposerReleasesbyAlbum") || 2,
 	);
 
 	# we can have different defaults depending on the OS
@@ -286,6 +296,9 @@ sub init {
 
 	# initialise any new prefs
 	$prefs->init(\%defaults, 'Slim::Utils::Prefs::Migration');
+
+	# remove some SN/MySB legacy
+	$prefs->remove(qw(snInitErrors snLastSyncDown sn_disable_stats sn_disabled_plugins sn_email sn_protocolhandlers sn_session sn_sync));
 
 	# perform OS-specific post-init steps
 	$os->postInitPrefs($prefs);
@@ -372,8 +385,7 @@ sub init {
 			return 0 if ref $new ne 'ARRAY';
 
 			# don't accept duplicate entries
-			my %seen;
-			return 0 if scalar ( grep { !$seen{$_}++ } @{$new} ) != scalar @$new;
+			return 0 if scalar Slim::Utils::Misc::uniq(@$new) != scalar @$new;
 
 			foreach (@{ $new }) {
 				if (Slim::Utils::Misc::isWinDrive($_)) {
@@ -396,8 +408,15 @@ sub init {
 
 	$prefs->setChange(
 		sub { Slim::Control::Request::executeRequest(undef, ['wipecache', $prefs->get('dontTriggerScanOnPrefChange') ? 'queue' : undef]) },
-		qw(splitList groupdiscs useTPE2AsAlbumArtist)
+		qw(splitList groupdiscs useTPE2AsAlbumArtist cleanupReleaseTypes worksScan)
 	);
+
+	$prefs->setChange( sub {
+		Slim::Schema::Genre->loadMyClassicalGenreMap();
+		if ( $prefs->get('worksScan') == 2 ) {
+			Slim::Control::Request::executeRequest(undef, ['wipecache', $prefs->get('dontTriggerScanOnPrefChange') ? 'queue' : undef]);
+		}
+	}, 'myClassicalGenres' );
 
 	$prefs->setChange( sub {
 		my $newRoles = $_[1];
@@ -405,9 +424,11 @@ sub init {
 
 		if ( %$oldRoles - %$newRoles || (scalar grep {!exists $newRoles->{$_}} keys %$oldRoles) ) {
 			Slim::Control::Request::executeRequest(undef, ['wipecache', $prefs->get('dontTriggerScanOnPrefChange') ? 'queue' : undef]);
-			Slim::Schema::Contributor->initializeRoles()
 		}
+		Slim::Schema::Contributor->initializeRoles();
 	}, 'userDefinedRoles' );
+
+	$prefs->setChange( sub { Slim::Schema::Contributor->initializeRoles() }, 'composerInArtists', 'conductorInArtists', 'bandInArtists', 'trackartistInArtists', 'useUnifiedArtistsList', 'artistAlbumLink', 'albumartistAlbumLink', 'trackartistAlbumLink', 'composerAlbumLink', 'conductorAlbumLink', 'bandAlbumLink');
 
 	$prefs->setChange( sub { Slim::Utils::Misc::setPriority($_[1]) }, 'serverPriority');
 
@@ -547,7 +568,7 @@ sub init {
 		# Rebuild Jive cache if VA setting is changed
 		$prefs->setChange( sub {
 			Slim::Schema->wipeCaches();
-		}, 'variousArtistAutoIdentification', 'composerInArtists', 'conductorInArtists', 'bandInArtists', 'trackartistInArtists', 'useUnifiedArtistsList', 'userDefinedRoles');
+		}, 'variousArtistAutoIdentification', 'composerInArtists', 'conductorInArtists', 'bandInArtists', 'trackartistInArtists', 'useUnifiedArtistsList', 'userDefinedRoles', 'artistAlbumLink', 'albumartistAlbumLink', 'trackartistAlbumLink', 'composerAlbumLink', 'conductorAlbumLink', 'bandAlbumLink');
 
 		$prefs->setChange( sub {
 			Slim::Control::Queries->wipeCaches();

@@ -1,5 +1,6 @@
 PLUGIN_ONLINE_LIBRARY_MODULE_NAME
 	CS	Integrace online hudební knihovny
+	DA	Integration af online musikbibliotek
 	DE	Online Musiksammlungsintegration
 	EN	Online Music Library Integration
 	FR	Intégration de bibliothèques en ligne
@@ -9,6 +10,7 @@ PLUGIN_ONLINE_LIBRARY_MODULE_NAME
 
 PLUGIN_ONLINE_LIBRARY_MODULE_NAME_DESC
 	CS	Získejte větší kontrolu nad tím, jak jsou vaše online hudební knihovny integrovány s místní hudbou.
+	DA	Få mere kontrol over hvordan dit online musikbibliotek er integreret med din lokale musik.
 	DE	Erweiterte Kontrolle über die Integration ihrer Online-Musiksammlungen.
 	EN	Get more control over how your online music libraries are integrated with your local music.
 	FR	Obtenez plus de contrôle sur la façon dont vos bibliothèques musicales en ligne sont intégrées à votre musique locale.
@@ -18,6 +20,7 @@ PLUGIN_ONLINE_LIBRARY_MODULE_NAME_DESC
 
 PLUGIN_ONLINE_LIBRARY_INTEGRATE_NO_POLL
 	CS	Integrovat online knihovnu, ale automaticky nekontrolovat změny
+	DA	Integrér online musikbibliotek, men undlad automatisk check for ændringer
 	DE	Online Sammlung integrieren aber nicht auf Änderungen überprüfen
 	EN	Integrate online library but do not automatically check for changes
 	FR	Intégrer la bibliothèque en ligne mais ne pas vérifier automatiquement les changements
@@ -27,6 +30,7 @@ PLUGIN_ONLINE_LIBRARY_INTEGRATE_NO_POLL
 
 PLUGIN_ONLINE_LIBRARY_FULL_INTEGRATION
 	CS	Integrovat online knihovnu a automaticky kontrolovat změny
+	DA	Integrér online musikbibliotek, tillad automatisk check for ændringer
 	DE	Online Sammlung integrieren und automatisch auf Änderungen überprüfen
 	EN	Integrate online library and automatically check for changes
 	FR	Intégrer la bibliothèque en ligne et vérifier automatiquement les changements
@@ -36,6 +40,7 @@ PLUGIN_ONLINE_LIBRARY_FULL_INTEGRATION
 
 PLUGIN_ONLINE_LIBRARY_NO_INTEGRATION
 	CS	Neintegrovat online hudební sbírku
+	DA	Integrér ikke online musikbibliotek
 	DE	Online Sammlung nicht integrieren
 	EN	Do not integrate online music collection
 	FR	Ne pas intégrer la bibliothèque en ligne
@@ -45,6 +50,7 @@ PLUGIN_ONLINE_LIBRARY_NO_INTEGRATION
 
 PLUGIN_ONLINE_LIBRARY_POLL_UPDATES_NOT_AVAILABLE
 	CS	Není k dispozici žádná podporovaná implementace streamovací služby.
+	DA	Ingen understøttet streaming tjeneste fundet.
 	DE	Es wurde kein unterstützter Streaming-Dienst gefunden.
 	EN	There's no supported streaming service implementation available.
 	FR	Aucun service de streaming pris en charge n'a été trouvé.
@@ -54,6 +60,7 @@ PLUGIN_ONLINE_LIBRARY_POLL_UPDATES_NOT_AVAILABLE
 
 PLUGIN_ONLINE_LIBRARY_DEDUPE_PREFER_LOCAL
 	CS	Hudba bez online duplikátů
+	DA	Musikbibliotek uden online dubletter
 	DE	Musiksammlung ohne Online-Dubletten
 	EN	Music without online duplicates
 	FR	Bibliothèque sans doublons en ligne
@@ -63,6 +70,7 @@ PLUGIN_ONLINE_LIBRARY_DEDUPE_PREFER_LOCAL
 
 PLUGIN_ONLINE_LIBRARY_DEDUPE_PREFER_LOCAL_DESC
 	CS	Pokud máte v online hudební sbírce jinou kopii, zobrazit pouze místní album.
+	DA	Vis kun lokale albums, når en anden kopi er til rådighed i dit online musikbibliotek.
 	DE	Wenn ein Album lokal wie auch online vorhanden ist, zeige nur lokale Kopie.
 	EN	Show only local album if you have another copy in your online music collection.
 	FR	Afficher uniquement l'album local lorsqu'une copie existe dans la bibliothèque en ligne.
@@ -72,6 +80,7 @@ PLUGIN_ONLINE_LIBRARY_DEDUPE_PREFER_LOCAL_DESC
 
 PLUGIN_ONLINE_LIBRARY_LOCAL_MUSIC_ONLY
 	CS	Pouze místní skladby (bez hudební služby)
+	DA	Kun lokale numre (ingen streaming tjeneste)
 	DE	Nur lokale Titel (keine Streaming Dienste)
 	EN	Local tracks only (no music service)
 	FR	Morceaux locaux uniquement (pas de service de streaming)
@@ -81,6 +90,7 @@ PLUGIN_ONLINE_LIBRARY_LOCAL_MUSIC_ONLY
 
 PLUGIN_ONLINE_LIBRARY_LOCAL_MUSIC_ONLY_DESC
 	CS	Pouze místní skladby (bez hudební služby)
+	DA	Opret musikbibliotek udelukkende med lokale numre (ingen streaming tjeneste)
 	DE	Erstelle Bibliotheksansicht ausschliesslich mit lokalen Titeln (keine Streaming Dienste)
 	EN	Create library view with local tracks only (no music services)
 	FR	Créer une vue bibliothèque avec des morceaux locaux uniquement (pas de service de streaming)
@@ -90,6 +100,7 @@ PLUGIN_ONLINE_LIBRARY_LOCAL_MUSIC_ONLY_DESC
 
 PLUGIN_ONLINE_LIBRARY_NO_PLAYLIST_IMPORT
 	CS	Neimportovat seznamy skladeb.
+	DA	Ikke importér afspillelister.
 	DE	Wiedergabelisten nicht importieren.
 	EN	Don't import playlists.
 	FR	Ne pas importer les listes de lecture.
@@ -97,6 +108,7 @@ PLUGIN_ONLINE_LIBRARY_NO_PLAYLIST_IMPORT
 
 PLUGIN_ONLINE_LIBRARY_SERVICE_LOGO
 	CS	Logo hudební služby
+	DA	Streamingtjeneste-logo
 	DE	Musikdienst-Logo
 	EN	Music Service Logo
 	FR	Logo du service de streaming
@@ -106,6 +118,7 @@ PLUGIN_ONLINE_LIBRARY_SERVICE_LOGO
 
 PLUGIN_ONLINE_LIBRARY_SERVICE_LOGO_DESC
 	CS	Umístit logo streamovací služby na obal alba (pokud je k dispozici).
+	DA	Markér online albums med logo fra streamingtjenesten (hvis til rådighed)
 	DE	Markiere Online-Alben mit Musikdienst-Logo (falls verfügbar).
 	EN	Put streaming service logo on top of album artwork (if available).
 	FR	Superposer le logo du service de streaming à la pochette de l'album (si disponible).
@@ -115,6 +128,7 @@ PLUGIN_ONLINE_LIBRARY_SERVICE_LOGO_DESC
 
 PLUGIN_ONLINE_LIBRARY_SETUP_RESCAN
 	CS	Pouze znovu prohledat online hudební knihovny
+	DA	Kun genscanning af online musikbiblioteket
 	DE	Nur Online Musiksammlung neu einlesen
 	EN	Only rescan online music library
 	FR	Analyser uniquement la bibliothèque en ligne
@@ -124,6 +138,7 @@ PLUGIN_ONLINE_LIBRARY_SETUP_RESCAN
 
 PLUGIN_ONLINE_LIBRARY_GENRE_REPLACEMENT
 	CS	Náhrada žánru
+	DA	Udskiftning af genrer
 	DE	Stilrichtungen ersetzen
 	EN	Genre Replacement
 	FR	Remplacement de genre
@@ -133,6 +148,7 @@ PLUGIN_ONLINE_LIBRARY_GENRE_REPLACEMENT
 
 PLUGIN_ONLINE_LIBRARY_GENRE_REPLACEMENT_DESC
 	CS	Bohužel ne všechny streamovací služby podporují žánry. Toto nastavení umožňuje přiřadit skladby k žánrům na základě jejich názvu nebo jména interpreta. To samozřejmě není vhodné pro skutečné sbírky. Ale např. umožňuje označit určité skladby konkrétním žánrem, který se použije v zobrazení knihovny.
+	DA	Desværre understøttes genre ikke af alle streaming tjenester. Denne indstilling tillader at definere genre baseret på nummerets titel eller kunstnerens navn. Dette vil givetvis fungere dårligt med store musiksamlinger, men det tillader f.eks. at mærke bestemte numre med en specifik genre for et givet delbibliotek.
 	DE	Nicht alle Musikdienste unterstützen Stilrichtungen. Diese Einstellung erlaubt es ihnen, Titel auf Grund ihres Namens oder des Interpreten einer Stilrichtung zuzuordnen. Das funktioniert offensichtlich nicht gut mit grossen Sammlungen. Aber die Funktion erlaubt es, gewisse Titel einer Stilrichtung zuzuordnen, um diese dann z.B. in einer Sammlungs-Ansicht zu berücksichtigen.
 	EN	Unfortunatelly not all streaming services support genres. This setting allows you to map tracks to genres based on their title or artist name. This obviously doesn't scale for real collections. But it eg. allows you to tag certain tracks with a specific genre to be applied in a library view.
 	FR	Tous les services de streaming ne prenant pas en charge les genres, ce paramètre permet de mapper des morceaux à des genres en fonction de leur titre ou du nom de l'artiste. Évidemment, cela ne fonctionne pas très bien avec les grosses bibliothèques. Mais cette association permet, par exemple, de regrouper certains morceaux dans des bibliothèques thématiques.
@@ -142,6 +158,7 @@ PLUGIN_ONLINE_LIBRARY_GENRE_REPLACEMENT_DESC
 
 PLUGIN_ONLINE_LIBRARY_GENRE_REPLACEMENT_ADVANCED
 	CS	Pokročilá náhrada žánru a typu vydání
+	DA	Avancerede genre og udgivelsestype erstatninger
 	DE	Erweiterte Ersetzung
 	EN	Advanced genre and release type replacement
 	FR	Remplacement avancé de genre et de type de sortie
@@ -150,12 +167,14 @@ PLUGIN_ONLINE_LIBRARY_GENRE_REPLACEMENT_ADVANCED
 
 PLUGIN_ONLINE_LIBRARY_RELEASE_TYPE
 	CS	Typ vydání
+	DA	Udgivelsestype
 	EN	Release Type
 	FR	Type de sortie
 	HU	Kiadás típusa
 
 PLUGIN_ONLINE_LIBRARY_GENRE_REPLACEMENT_BASIC
 	CS	Zpět na základní nastavení
+	DA	Tilbage til grundindstillinger
 	DE	Zurück zu den Grundeinstellungen
 	EN	Back to the basic settings
 	FR	Retour aux paramètres de base
@@ -164,6 +183,7 @@ PLUGIN_ONLINE_LIBRARY_GENRE_REPLACEMENT_BASIC
 
 PLUGIN_ONLINE_LIBRARY_TAG
 	CS	Tag:
+	DA	Mærke:
 	DE	Feld:
 	EN	Tag:
 	FR	Tag :
@@ -173,6 +193,7 @@ PLUGIN_ONLINE_LIBRARY_TAG
 
 PLUGIN_ONLINE_LIBRARY_MATCHING
 	CS	Odpovídající text:
+	DA	Matchende tekst:
 	DE	Zutreffender Text:
 	EN	Matching Text:
 	FR	Texte correspondant :
@@ -182,6 +203,7 @@ PLUGIN_ONLINE_LIBRARY_MATCHING
 
 PLUGIN_ONLINE_LIBRARY_GENRE_REPLACEMENT_PROGRESS
 	CS	Nahrazení online žánru a typu vydání
+	DA	Online genre og udgivelsestype erstatninger
 	DE	Online Stilrichtungen ersetzen
 	EN	Online Genre and Release Type Replacement
 	FR	Remplacement des genres et des types de sorties en ligne
@@ -191,6 +213,7 @@ PLUGIN_ONLINE_LIBRARY_GENRE_REPLACEMENT_PROGRESS
 
 PLUGIN_ONLINE_LIBRARY_INFORMATION_PLAYLISTTRACKS
 	CS	Celkový počet skladeb v seznamech skladeb
+	DA	Antal numre i afspillelisten
 	DE	Anzahl Titel in Wiedergabelisten
 	EN	Total Tracks in Playlists
 	FR	Morceaux dans des listes de lecture

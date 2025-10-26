@@ -136,13 +136,8 @@ sub getFeedAsync {
 
 	main::INFOLOG && $log->is_info && $log->info("Async request: $url");
 
-	# Bug 3165
-	# Override user-agent and Icy-Metadata headers so we appear to be a web browser
-	my $ua = Slim::Utils::Misc::userAgentString();
-	$ua =~ s{iTunes/4.7.1}{Mozilla/5.0};
-
 	my %headers = (
-		'User-Agent'   => $ua,
+		'User-Agent'   => Slim::Utils::Misc::userAgentString(),
 		'Icy-Metadata' => '',
 	);
 
@@ -768,13 +763,6 @@ sub unescapeAndTrim {
 
 	# strip all markup tags
 	$data =~ s/<[a-zA-Z\/][^>]*>//gi;
-
-	# the following taken from Rss News plugin, but apparently
-	# it results in an unnecessary decode, which actually causes problems
-	# and things seem to work fine without it, so commenting it out.
-	#if ($] >= 5.008) {
-	#	utf8::decode($data);
-	#}
 
 	return $data;
 }

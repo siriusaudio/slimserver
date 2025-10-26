@@ -116,7 +116,29 @@ sub handler {
 			}
 		},
 		cb => sub {
-			$callback->($client, $params, $class->_addInfo($client, $params, $data), @args);
+			my $pageInfo = $class->_addInfo($client, $params, $data);
+
+			my $finalize;
+			my $timeout = Time::HiRes::time() + MAX_DOWNLOAD_WAIT;
+
+			$finalize = sub {
+				Slim::Utils::Timers::killTimers(undef, $finalize);
+
+				# if a plugin is still being downloaded, wait a bit longer, or the user might restart the server before we're done
+				if ( Time::HiRes::time() <= $timeout && Slim::Utils::PluginDownloader->downloading ) {
+					Slim::Utils::Timers::setTimer(undef, time() + 1, $finalize);
+
+					main::DEBUGLOG && $log->is_debug && $log->debug("PluginDownloader is still busy - waiting a little longer...");
+					return;
+				}
+				elsif ( Time::HiRes::time() > $timeout ) {
+					$log->warn("Plugin download timed out");
+				}
+
+				$callback->($client, $params, $pageInfo, @args);
+			};
+
+			$finalize->();
 		},
 		onError => sub { $data->{errors}->{$_[0]} = $_[1] },
 	});

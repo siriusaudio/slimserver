@@ -1,5 +1,10 @@
 package Slim::Schema::Contributor;
 
+# Logitech Media Server Copyright 2001-2024 Logitech.
+# Lyrion Music Server Copyright 2025 Lyrion Community.
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License,
+# version 2.
 
 use strict;
 use base 'Slim::Schema::DBI';
@@ -19,6 +24,13 @@ my @contributorRoles;
 my @contributorRoleIds;
 my $totalContributorRoles;
 my %roleToContributorMap;
+my @defaultContributorRoles;
+my @userDefinedRoles;
+my @activeUserDefinedRoles;
+my @albumLinkUserDefinedRoles;
+my @activeAndAlbumLinkUserDefinedRoles;
+my @allAlbumLinkRoles;
+my @inArtistsRoles;
 
 my $prefs = preferences('server');
 
@@ -37,6 +49,8 @@ initializeRoles();
 		namesearch
 		musicbrainz_id
 		extid
+		portraitid
+		portrait
 	));
 
 	$class->set_primary_key('id');
@@ -54,9 +68,7 @@ initializeRoles();
 
 	$class->many_to_many('albums', 'contributorAlbums' => 'album', undef, { 'distinct' => 1 });
 
-	if ($] > 5.007) {
-		$class->utf8_columns(qw/name namesort/);
-	}
+	$class->utf8_columns(qw/name namesort/);
 
 	$class->resultset_class('Slim::Schema::ResultSet::Contributor');
 }
@@ -79,6 +91,22 @@ sub initializeRoles {
 	@contributorRoleIds = values %contributorToRoleMap;
 	$totalContributorRoles = scalar @contributorRoles;
 	%roleToContributorMap = reverse %contributorToRoleMap;
+	@defaultContributorRoles = grep { __PACKAGE__->isDefaultContributorRole($_) } contributorRoles();
+
+	# de-reference the pref so we don't accidentally change it below
+	my %udr = %{$prefs->get('userDefinedRoles')};
+	(@userDefinedRoles, @activeUserDefinedRoles, @albumLinkUserDefinedRoles, @activeAndAlbumLinkUserDefinedRoles) = ();
+	foreach my $role ( @contributorRoles ) {
+		if ( __PACKAGE__->typeToRole($role) >= MIN_CUSTOM_ROLE_ID ) {
+			push @userDefinedRoles, $role;
+			push @activeUserDefinedRoles, $role if $udr{$role}->{include};
+			push @albumLinkUserDefinedRoles, $role if $udr{$role}->{albumLink};
+			push @activeAndAlbumLinkUserDefinedRoles, $role if $udr{$role}->{include} && $udr{$role}->{albumLink};
+		}
+	}
+
+	@allAlbumLinkRoles = ( grep( { $prefs->get(lc($_) . 'AlbumLink') } contributorRoles() ), @albumLinkUserDefinedRoles );
+	@inArtistsRoles = grep { $prefs->get(lc($_) . 'InArtists') } contributorRoles();
 }
 
 sub contributorRoles {
@@ -93,7 +121,7 @@ sub isDefaultContributorRole {
 }
 
 sub defaultContributorRoles {
-	return grep { __PACKAGE__->isDefaultContributorRole($_) } contributorRoles();
+	return @defaultContributorRoles;
 }
 
 sub splitDefaultAndCustomRoles {
@@ -117,24 +145,31 @@ sub splitDefaultAndCustomRoles {
 sub userDefinedRoles {
 	my $class = shift;
 	my $activeOnly = shift;
+	my $albumLink = shift;
 
-	# de-reference the pref so we don't accidentally change it below
-	my %udr = %{$prefs->get('userDefinedRoles')};
-	return grep { $activeOnly ? $udr{$_}->{include} : $udr{$_} } contributorRoles();
+	return @activeAndAlbumLinkUserDefinedRoles if $activeOnly && $albumLink;
+	return @activeUserDefinedRoles if $activeOnly;
+	return @albumLinkUserDefinedRoles if $albumLink;
+	return @userDefinedRoles;
 }
 
 sub activeContributorRoles {
 	my $class = shift;
 	my $includeTrackArtist = shift;
+	my $noUserRoles = shift;
 
 	my @roles = ( 'ARTIST', 'ALBUMARTIST' );
 	push @roles, 'TRACKARTIST' if $includeTrackArtist && !$prefs->get('trackartistInArtists');
 
-	# Loop through each pref to see if the user wants to show that contributor role. Also include user-defined roles.
-	push @roles, grep { $prefs->get(lc($_) . 'InArtists') } contributorRoles();
-	push @roles, __PACKAGE__->userDefinedRoles(1);
+	# Return roles that the user wants to show. Also include user-defined roles.
+	push @roles, @inArtistsRoles;
+	push @roles, __PACKAGE__->userDefinedRoles(1) unless $noUserRoles;
 
 	return grep { $_ } @roles;
+}
+
+sub allAlbumLinkRoles {
+	return @allAlbumLinkRoles;
 }
 
 sub contributorRoleIds {

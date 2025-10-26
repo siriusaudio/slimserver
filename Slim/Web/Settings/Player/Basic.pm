@@ -13,6 +13,8 @@ use Slim::Utils::Log;
 use Slim::Utils::Prefs;
 use Slim::Utils::Strings qw(string cstring);
 
+use constant DATE_TIME_SCREENSAVER_PLUGIN => 'DateTime';
+
 my $prefs = preferences('server');
 
 sub name {
@@ -64,6 +66,13 @@ sub handler {
 	# reset all client preferences to factory defaults
 	if ($paramRef->{resetprefs}) {
 		$client->resetPrefs();
+	}
+
+	# install the Date and Time screensaver if desired
+	if ($paramRef->{installScreensavers}) {
+		Slim::Utils::ExtensionsManager->enablePlugin(DATE_TIME_SCREENSAVER_PLUGIN);
+		Slim::Utils::PluginManager->_needsEnable(DATE_TIME_SCREENSAVER_PLUGIN);
+		Slim::Utils::PluginManager->load('', DATE_TIME_SCREENSAVER_PLUGIN);
 	}
 
 	# array prefs handled by this handler not handler::SUPER
@@ -224,6 +233,16 @@ sub getPlayerIcon {
 	$paramRef ||= {};
 
 	my $model = $client->model(1);
+
+	# Squeezelite players can use images based on model name:
+	# remove all but a-z, 0-9, - and _ from the lowercase name to match a PNG image.
+	if ($model eq 'squeezelite') {
+		$model = lc($client->modelName());
+		$model =~ s/[^-_a-z0-1]//g;
+		return $model if Slim::Web::HTTP::fixHttpPath($paramRef->{'skinOverride'} || $prefs->get('skin'), "html/images/Players/$model.png");
+
+		$model = $client->model(1);
+	}
 
 	# default icon for software emulators and media players
 	$model = 'squeezebox' if $model eq 'squeezebox2';

@@ -5,8 +5,8 @@ ALTER TABLE albums ADD subtitle blob;
 ALTER TABLE albums ADD label blob;
 CREATE INDEX tracksWorkIndex ON tracks (work);
 CREATE TABLE works (
-  id  integer PRIMARY KEY AUTOINCREMENT,
-  composer integer,
+  id  integer PRIMARY KEY AUTO_INCREMENT,
+  composer int(10) unsigned,
   title blob,
   titlesort text,
   titlesearch text,

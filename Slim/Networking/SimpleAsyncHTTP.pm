@@ -196,6 +196,7 @@ my $http = Slim::Networking::SimpleAsyncHTTP->new(
 		expires  => '1h',	# optional, specify the length of time to cache
 		options  => { key/value },  # optional set of key/value pairs for the underlying socket
 		socks    => { key/value },  # optional use of socks tunnel
+		insecureHTTPS => 1,  # optional, allow HTTPS connections with invalid certificates
 	}
 );
 

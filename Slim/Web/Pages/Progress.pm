@@ -1,5 +1,11 @@
 package Slim::Web::Pages::Progress;
 
+# Logitech Media Server Copyright 2001-2024 Logitech.
+# Lyrion Music Server Copyright 2024 Lyrion Community.
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License,
+# version 2.
+
 use strict;
 
 use Slim::Schema;
@@ -15,7 +21,7 @@ sub progress {
 	if ($params->{'abortScan'}) {
 		Slim::Music::Import->abortScan();
 	}
-	
+
 	return undef if !Slim::Schema::hasLibrary();
 
 	my $total_time = 0;
@@ -39,72 +45,72 @@ sub progress {
 
 			my $bar;
 			my $barFinish = $p->finish ? $barLen : $p->total ? $p->done / $p->total * $barLen : -1;
-	
+
 			for (my $i = 0; $i < $barLen; $i++) {
 				$bar .= ( $i <= $barFinish ) ? $bar1 : $bar0;
 			}
-	
+
 			my $runtime = ((!$p->active && $p->finish) ? $p->finish : time()) - $p->start;
-	
+
 			my $hrs  = int($runtime / 3600);
 			my $mins = int(($runtime - $hrs * 3600)/60);
 			my $sec  = $runtime - 3600 * $hrs - 60 * $mins;
-	
+
 			my $item = {
 				'obj'  => {},
 				'bar'  => $bar,
 				'time' => sprintf("%02d:%02d:%02d", $hrs, $mins, $sec),
 			};
-			
+
 			foreach ($p->columns) {
 				$item->{obj}->{$_} = $p->$_();
 			}
-			
+
 			if ($p->name =~ /(.*)\|(.*)/) {
 				$item->{fullname} = string($2 . '_PROGRESS') . string('COLON') . ' ' . $1;
 				$item->{obj}->{name} = $2;
 			}
-	
+
 			$total_time += $runtime;
-	
+
 			push @{$params->{'progress_items'}}, $item;
 
 		}
 		else {
 			$failure = $p->info || 1;
 		}
-		
+
 		$finished = $p->finish;
 	}
 
 	$params->{'desc'} = 1;
 
 	# special message for importers once finished
-	if ($params->{'type'} && $params->{'type'} eq 'importer' && !Slim::Music::Import->stillScanning) {
+	if (!Slim::Music::Import->stillScanning) {
 
 		if (@progress) {
 
 			if ($failure) {
 				$params->{'message'} = '?';
-				
+
 				if ($failure eq 'SCAN_ABORTED') {
-					$params->{'message'} = string($failure); 
+					$params->{'message'} = string($failure);
 				}
 				elsif ($failure ne '1') {
-					$params->{'message'} = string('FAILURE_PROGRESS', string($failure . '_PROGRESS')); 
+					$params->{'message'} = string('FAILURE_PROGRESS', string($failure . '_PROGRESS'));
 				}
-				
+
 				$params->{'failed'} = $failure;
 			}
 			else {
 				$params->{'message'} = string('PROGRESS_IMPORTER_COMPLETE_DESC');
 			}
-				
-			
+
+
 			my $hrs  = int($total_time / 3600);
 			my $mins = int(($total_time - $hrs * 3600)/60);
 			my $sec  = $total_time - 3600 * $hrs - 60 * $mins;
-			
+
 			$params->{'total_time'} = sprintf("%02d:%02d:%02d", $hrs, $mins, $sec);
 			$params->{'total_time'} .= '&nbsp;(' . Slim::Utils::DateTime::longDateF($finished) . ' / ' . Slim::Utils::DateTime::timeF($finished) . ')' if $finished;
 

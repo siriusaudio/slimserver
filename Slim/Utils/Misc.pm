@@ -31,7 +31,7 @@ L<Slim::Utils::Misc> serves as a collection of miscellaneous utility
 use strict;
 use Exporter::Lite;
 
-our @EXPORT = qw(assert msg msgf errorMsg specified);
+our @EXPORT = qw(assert msg msgf errorMsg specified dumpFiltered);
 
 use File::Basename qw(basename);
 use File::Spec::Functions qw(:ALL);
@@ -39,6 +39,7 @@ use File::Path qw(mkpath rmtree);
 use File::Temp qw(tempdir);
 use File::Slurp;
 use FindBin qw($Bin);
+use List::Util qw();
 use POSIX qw(strftime);
 use Scalar::Util qw(blessed);
 use Time::HiRes;
@@ -64,7 +65,7 @@ my $scannerlog = logger('scan.scanner');
 my $ospathslog = logger('os.paths');
 my $osfileslog = logger('os.files');
 
-my $WEBLINK_SUPPORTED_UA_RE = qr/\b(?:iPeng|SqueezePad|OrangeSqueeze|Squeeze-Control|Squeezer|OpenSqueeze)\b/i;
+my $WEBLINK_SUPPORTED_UA_RE = qr/\b(?:iPeng|SqueezePad|OrangeSqueeze|Squeeze-Control|Squeezer|OpenSqueeze|SqueezeClient)\b/i;
 my $WEBBROWSER_UA_RE = qr/\b(?:FireFox|Chrome|Safari|Mozilla)\b/i;
 
 my $canFollowAlias = 0;
@@ -80,7 +81,7 @@ elsif ($^O =~/darwin/i) {
 }
 
 # Cache our user agent string.
-my $userAgentString;
+my ($userAgentString, $legacyUserAgentString);
 my $tempdir;
 
 my %pathToFileCache = ();
@@ -232,22 +233,6 @@ sub pathFromFileURL {
 		logBacktrace("Path isn't a file URL: $url");
 
 		return $url;
-	}
-
-	# Bug: 1786
-	#
-	# Work around a perl bug that exists in 5.8.0, 5.8.1 & 5.8.2? - where
-	# a join() can return garbage because it's internal scratch space
-	# wasn't properly cleared with a UTF8 string that previously went
-	# through it. The call to $uri->file() below contains such a join, and
-	# was causing bogus data to be returned on OSX 10.3.x systems.
-	#
-	# See
-	# http://lists.bestpractical.com/pipermail/rt-devel/2004-January/005283.html
-	# for some more information.
-	if ($] > 5.007 && $] <= 5.008002) {
-
-		$url = Slim::Utils::Unicode::utf8off($url);
 	}
 
 	# Bug 3589, support win32 backslashes in URLs, file://C:\foo\bar
@@ -733,10 +718,9 @@ sub getMediaDirs {
 
 		$mediadirs = [ grep { !$ignoreList->{$_} } @$mediadirs ];
 
-		my %seen;
-		$mediadirs = [ grep { $_ && !$seen{$filter}++ } map {
+		$mediadirs = [ uniq( map {
 			($filter eq $_ || $filter =~ /^\Q$_\E/) && $filter
-		} @$mediadirs] if $filter;
+		} @$mediadirs ) ] if $filter;
 	}
 
 	$mediadirsCache{$type} = [ map { $_ } @$mediadirs ] unless $filter;
@@ -810,6 +794,10 @@ $_ignoredItems{'..'} = 1;
 # some items which are exposed on shares on popular platforms
 $_ignoredItems{'#recycle'} = 1;
 $_ignoredItems{'#snapshot'} = 1;
+$_ignoredItems{'.AppleDouble'} = 1;
+$_ignoredItems{'.AppleDB'} = 1;
+$_ignoredItems{'.AppleDesktop'} = 1;
+$_ignoredItems{'.DS_Store'} = 1;
 
 # Don't include old Shoutcast recently played items.
 $_ignoredItems{'ShoutcastBrowser_Recently_Played'} = 1;
@@ -1209,15 +1197,20 @@ Utility functions for strings we send out to the world.
 =cut
 
 sub userAgentString {
+	my ($legacy) = @_;
 
-	if (defined $userAgentString) {
+	# allow callers to force the legacy user agent string
+	if (defined $userAgentString && !$legacy) {
 		return $userAgentString;
+	}
+	elsif (defined $legacyUserAgentString && $legacy) {
+		return $legacyUserAgentString;
 	}
 
 	my $osDetails = Slim::Utils::OSDetect::details();
 
-	# We masquerade as iTunes for radio stations that really want it.
-	$userAgentString = sprintf("iTunes/4.7.1 (%s; N; %s; %s; %s; %s) %s/$::VERSION/$::REVISION",
+	my $ua = sprintf("%s (%s; N; %s; %s; %s; %s) %s/$::VERSION/$::REVISION",
+		$legacy ? 'iTunes/4.7.1' : 'Mozilla/5.0',
 		$osDetails->{'os'},
 		$osDetails->{'osName'},
 		($osDetails->{'osArch'} || 'Unknown'),
@@ -1226,7 +1219,14 @@ sub userAgentString {
 		'SqueezeCenter, Squeezebox Server, Lyrion Music Server',
 	);
 
-	return $userAgentString;
+	if ($legacy) {
+		$legacyUserAgentString = $ua;
+	}
+	else {
+		$userAgentString = $ua;
+	}
+
+	return $ua;
 }
 
 =head2 assert ( $exp, $msg )
@@ -1348,6 +1348,49 @@ sub errorMsg {
 	msg("ERROR: $msg\n", 1);
 }
 
+
+=head2 dumpFiltered( $object )
+
+	Uses Data::Dump to dump the object, but filters out some of the
+	less useful or noisy information.
+
+=cut
+
+sub dumpFiltered {
+	my ($object) = @_;
+
+	# Data::Dump is only loaded if in INFO or DEBUG mode
+	if (main::INFOLOG && ref $object) {
+		return Data::Dump::dumpf($object, sub {
+			my ($ctx, $obj) = @_;
+
+			return { object => _dumpClient($obj) } if $ctx->object_isa('Slim::Player::Client');
+			return { object => _dumpTrack($obj) } if $ctx->object_isa('Slim::Schema::Track') || $ctx->object_isa('Slim::Schema::RemoteTrack');
+
+			return { object => [
+				[ $obj->handler, _dumpTrack($obj->track) ],
+				$ctx->class,
+			] } if $ctx->object_isa('Slim::Player::Song');
+
+			# warn 'class: ' . $ctx->class;
+			# warn 'reftype: ' . $ctx->reftype;
+			# warn 'container_class: ' . $ctx->container_class;
+			# warn 'container_self: ' . $ctx->container_self;
+			# warn 'depth: ' . $ctx->depth;
+			# warn 'expr: ' . $ctx->expr;
+
+			# default behaviour
+			return;
+		})
+	}
+
+	return $object;
+}
+
+sub _dumpClient { $_[0] && [ $_[0]->name, $_[0]->id, ref $_[0] ] }
+sub _dumpTrack { $_[0] && [ $_[0]->title, $_[0]->url, ref $_[0] ] }
+
+
 =head2 delimitThousands( $len)
 
 	Split a numeric string using the style of the server preferred language.
@@ -1399,6 +1442,12 @@ sub arrayDiff {
 	return \%diff;
 }
 
+# List::Util::uniq only became available in Perl 5.26 - provide fallback
+*uniq = List::Util->can('uniq') || sub {
+	my %seen;
+	return grep { !$seen{$_}++ } @_;
+};
+
 =head2 shouldCacheURL( $url)
 
 	Bug 3147, don't cache things (HTTP responses, parsed XML)
@@ -1429,21 +1478,6 @@ sub shouldCacheURL {
 
 	return 1;
 }
-
-=head2 runningAsService ( )
-
-Returns true if running as a Windows service.
-
-=cut
-
-sub runningAsService { if (main::ISACTIVEPERL) {
-
-	if (defined(&PerlSvc::RunningAsService) && PerlSvc::RunningAsService()) {
-		return 1;
-	}
-
-	return 0;
-} }
 
 =head2 validMacAddress ( )
 

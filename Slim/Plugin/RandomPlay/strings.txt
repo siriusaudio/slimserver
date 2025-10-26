@@ -35,6 +35,7 @@ PLUGIN_RANDOM_DESC
 
 PLUGIN_RANDOM_DISABLE
 	CS	Zastavit náhodný mix
+	DA	Stop tilfældig miks
 	DE	Zufallsmix anhalten
 	EN	Stop Random Mix
 	FR	Arrête mix aléatoire
@@ -313,6 +314,7 @@ PLUGIN_RANDOM_YEAR_DISABLE
 
 PLUGIN_RANDOM_WORK
 	CS	Mix děl
+	DA	Værkmiks
 	EN	Work Mix
 	DE	Werkmix
 	ES	Mezcla de Composición
@@ -322,6 +324,7 @@ PLUGIN_RANDOM_WORK
 
 PLUGIN_RANDOM_WORK_ITEM
 	CS	Náhodná díla
+	DA	Tilfældigt værk
 	EN	Random Work
 	DE	Zufälliges Werk
 	ES	Composición aleatorio
@@ -331,6 +334,7 @@ PLUGIN_RANDOM_WORK_ITEM
 
 PLUGIN_RANDOM_WORK_PLAYING
 	CS	Přehrávání náhodných děl
+	DA	Afspiller tilfældigt værk
 	EN	Playing Random Works
 	DE	Zufällige Werke werden wiedergegeben
 	ES	Reproduciendo composiciónes aleatorios
@@ -340,6 +344,7 @@ PLUGIN_RANDOM_WORK_PLAYING
 
 PLUGIN_RANDOM_WORK_DISABLE
 	CS	přestat přidávat díla
+	DA	Stop tilføjelse af værker
 	EN	stop adding works
 	DE	keine Werke mehr hinzuzufügen
 	ES	detener adición de composiciónes
@@ -349,6 +354,7 @@ PLUGIN_RANDOM_WORK_DISABLE
 
 PLUGIN_RANDOM_WORK_WEB
 	CS	Náhodná díla
+	DA	Tilfældige værker
 	EN	Random works
 	DE	Zufällige Werke
 	ES	Composición aleatorios
@@ -408,6 +414,7 @@ PLUGIN_RANDOM_SELECT_NONE
 
 PLUGIN_RANDOM_LIBRARY_FILTER
 	CS	Použít zobrazení knihovny
+	DA	Benyt delbiblioteker
 	DE	Bibliotheksansicht verwenden
 	EN	Use library view
 	FR	Utiliser la vue bibliothèque
@@ -637,6 +644,7 @@ PLUGIN_RANDOM_PRESS_RIGHT
 
 PLUGIN_RANDOM_TITLEMIX_WITH_GENRES
 	CS	Mix skladeb (omezeno na aktuální žánry)
+	DA	Nummermiks (begrænset til nuværende genrer)
 	DE	Titelmix (auf aktuelle Genres beschränkt)
 	EN	Song Mix (limited to current genres)
 	FR	Morceaux aléatoires (limités aux genres actuels)
@@ -646,6 +654,7 @@ PLUGIN_RANDOM_TITLEMIX_WITH_GENRES
 
 PLUGIN_RANDOM_ALBUM_MIX_WITH_GENRES
 	CS	Náhodné album (omezeno na aktuální žánry)
+	DA	Tilfældige albums (begrænset til nuværende genrer)
 	DE	Zufälliges Album (auf aktuelle Genres beschränkt)
 	EN	Random Album (limited to current genres)
 	FR	Album aléatoire (limité aux genres actuels)
@@ -655,6 +664,7 @@ PLUGIN_RANDOM_ALBUM_MIX_WITH_GENRES
 
 PLUGIN_RANDOM_TITLEMIX_KEEP_GENRES
 	CS	Mix skladeb (zachovat výběr žánrů)
+	DA	Nummermiks (behold valgte genrer)
 	DE	Titelmix (Genreauswahl beibehalten)
 	EN	Song Mix (keep genre selection)
 	FR	Morceaux aléatoires (conserver la sélection du genre)
@@ -662,6 +672,7 @@ PLUGIN_RANDOM_TITLEMIX_KEEP_GENRES
 
 PLUGIN_RANDOM_ALBUM_MIX_KEEP_GENRES
 	CS	Náhodné album (zachovat výběr žánrů)
+	DA	Tilfældige albums (behold valgte genrer)
 	DE	Zufälliges Album (Genreauswahl beibehalten)
 	EN	Random Album (keep genre selection)
 	FR	Album aléatoire (conserver la sélection du genre)

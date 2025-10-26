@@ -1,5 +1,6 @@
 PLUGIN_EXTENDED_BROWSEMODES
 	CS	Další režimy procházení
+	DA	Flere musik menuer
 	DE	Erweiterte Musik Menüs
 	EN	Additional Browse Modes
 	FR	Autres Modes de Navigation
@@ -11,6 +12,7 @@ PLUGIN_EXTENDED_BROWSEMODES
 
 PLUGIN_EXTENDED_BROWSEMODES_DESC
 	CS	Vytvořte si další režimy procházení a procházejte hudební knihovnu podle interpretů alba, skladatelů, vybraných žánrů a dalších.
+	DA	Opret flere menuer for at gennemse dit musikbibliotek efter albumkunstnere, komponister, udvalgte genrer, osv.
 	DE	Erstellen Sie erweiterte Menüs, um die Musiksammlung zu durchsuchen, z.B. Album-Interpreten, Komponisten, eine Auswahl von Stilrichtungen etc.
 	EN	Create additional browse modes to browse your music library by Album Artists, Composers, select Genres and more.
 	FR	Créer d'autres modes de navigation dans la bibliothèque musicale comme Artistes de l'Album, Compositeur, Genre etc.
@@ -40,6 +42,7 @@ PLUGIN_EXTENDED_BROWSEMODES_BROWSE_BY_ALBUMARTIST
 
 PLUGIN_EXTENDED_BROWSEMODES_BROWSE_BY_COMPOSERS
 	CS	Skladatelé
+	DA	Komponister
 	DE	Komponisten
 	EN	Composers
 	FR	Compositeurs
@@ -50,8 +53,29 @@ PLUGIN_EXTENDED_BROWSEMODES_BROWSE_BY_COMPOSERS
 	PL	Kompozytorzy
 	SV	Kompositörer
 
+PLUGIN_EXTENDED_BROWSEMODES_BROWSE_BY_PLAYLIST_FOLDER
+	CS	Složka seznamu skladeb
+	DA	Mappe med afspilningslister
+	DE	Wiedergabelisten-Ordner
+	EN	Playlists Folder
+	ES	Carpeta de listas de reproducción
+	FI	Soittoluettelokansio
+	FR	Dossier des listes de lecture
+	HE	תיקיית רשימות השמעה
+	HU	Műsorlista mappa
+	IT	Cartella delle playlist
+	JA	現在のプレイリストフォルダー
+	NL	Afspeellijstmap
+	NO	Mappe for spillelister
+	PL	Folder list odtwarzania
+	PT	Directoria com Playlists
+	RU	Папка "Плей-листы"
+	SV	Mapp för spellistor
+	ZH_CN	播放表文件夹
+
 PLUGIN_EXTENDED_BROWSEMODES_BROWSE_BY_CLASSICAL_MUSIC_BY_CONDUCTOR
 	CS	Klasická hudba podle dirigenta
+	DA	Klassisk musik sorteret efter dirigent
 	DE	Klassische Musik nach Dirigent
 	EN	Classical Music by Conductor
 	HU	Klasszikus zene adott karmestertől
@@ -59,6 +83,7 @@ PLUGIN_EXTENDED_BROWSEMODES_BROWSE_BY_CLASSICAL_MUSIC_BY_CONDUCTOR
 
 PLUGIN_EXTENDED_BROWSEMODES_BROWSE_BY_JAZZ_COMPOSERS
 	CS	Jazzoví skladatelé
+	DA	Jazz komponister
 	DE	Jazz Komponisten
 	EN	Jazz Composers
 	HU	Jazz zeneszerzők
@@ -66,6 +91,7 @@ PLUGIN_EXTENDED_BROWSEMODES_BROWSE_BY_JAZZ_COMPOSERS
 
 PLUGIN_EXTENDED_BROWSEMODES_ROLES
 	CS	Role přispěvatelů:
+	DA	Roller for kunstnerne:
 	DE	Rolle des Künstlers:
 	EN	Contributor Roles:
 	FR	Rôles des artistes :
@@ -77,6 +103,7 @@ PLUGIN_EXTENDED_BROWSEMODES_ROLES
 
 PLUGIN_EXTENDED_BROWSEMODES_RELEASE_TYPE
 	CS	Typ vydání:
+	DA	Udgivelsestype:
 	DE	Veröffentlichungstyp:
 	EN	Release type:
 	FR	Type de sortie :
@@ -85,6 +112,7 @@ PLUGIN_EXTENDED_BROWSEMODES_RELEASE_TYPE
 
 PLUGIN_EXTENDED_BROWSEMODES_RELEASE_TYPE_HINT
 	CS	Typy vydání:
+	DA	Udgivelsestyper:
 	DE	Veröffentlichungstypen:
 	EN	Release Types:
 	FR	Types de sorties :
@@ -93,6 +121,7 @@ PLUGIN_EXTENDED_BROWSEMODES_RELEASE_TYPE_HINT
 
 PLUGIN_EXTENDED_BROWSEMODES_BROWSE_BY
 	CS	Procházet podle:
+	DA	Visning efter:
 	DE	Anzeigen:
 	EN	Browse by:
 	FR	Parcourir par :
@@ -104,6 +133,7 @@ PLUGIN_EXTENDED_BROWSEMODES_BROWSE_BY
 
 PLUGIN_EXTENDED_BROWSEMODES_APPLY_TO
 	CS	Použít pro:
+	DA	Anvendes på:
 	DE	Anwenden auf:
 	EN	Apply to:
 	FR	Appliquer à :
@@ -115,7 +145,7 @@ PLUGIN_EXTENDED_BROWSEMODES_APPLY_TO
 
 PLUGIN_EXTENDED_BROWSEMODES_COMPILATIONS
 	CS	Sbírky
-	DA	Kompilationer
+	DA	Albumsamlinger
 	DE	Kompilationen
 	EN	Compilations
 	ES	Recopilaciones
@@ -133,6 +163,7 @@ PLUGIN_EXTENDED_BROWSEMODES_COMPILATIONS
 
 PLUGIN_EXTENDED_BROWSEMODES_BROWSEFS
 	CS	Disky a složky
+	DA	Diske og mapper
 	DE	Dateisystem
 	EN	Disks and folders
 	FR	Disques et dossiers
@@ -144,6 +175,7 @@ PLUGIN_EXTENDED_BROWSEMODES_BROWSEFS
 
 PLUGIN_EXTENDED_BROWSEMODES_CONTRIBUTOR_HINT
 	CS	Role přispěvatelů:
+	DA	Kunstner roller:
 	DE	Künstler-Rollen:
 	EN	Contributor roles:
 	FR	Rôles des artistes :
@@ -155,6 +187,7 @@ PLUGIN_EXTENDED_BROWSEMODES_CONTRIBUTOR_HINT
 
 PLUGIN_EXTENDED_BROWSEMODES_ALL_LIBRARY
 	CS	Všechny knihovny (výchozí)
+	DA	Hele musikbiblioteket (Standard)
 	DE	Ganze Musiksammlung (Standard)
 	EN	All Library (Default)
 	FR	Toutes les bibliothèques (par défaut)
@@ -166,6 +199,7 @@ PLUGIN_EXTENDED_BROWSEMODES_ALL_LIBRARY
 
 PLUGIN_EXTENDED_BROWSEMODES_LOSSLESS_PREFERRED
 	CS	Skrýt ztrátové duplikáty, pokud je k dispozici bezeztrátová skladba
+	DA	Skjul duplikater af numre komprimeret med tab af opløsning, hvis tabsfrie numre er til rådighed
 	DE	Keine verlustbehafteten Duplikate anzeigen
 	EN	Hide lossy duplicates if lossless track is available
 	FR	Masquer les doublons compressés avec perte si un fichier sans perte est disponible
@@ -177,6 +211,7 @@ PLUGIN_EXTENDED_BROWSEMODES_LOSSLESS_PREFERRED
 
 PLUGIN_EXTENDED_BROWSEMODES_LOSSLESS_PREFERRED_DESC
 	CS	Vytvoření zobrazení knihovny, které se snaží potlačit duplicitní skladby skrytím ztrátových verzí, pokud je k dispozici bezztrátová verze stejné nahrávky. To je obzvláště užitečné, pokud uchováváte sbírku skladeb pro použití doma (bezeztrátová) a na cestách (ztrátová).
+	DA	Opret en biblioteksvisning som skjuler duplikater af numre komprimeret med tab af opløsning, hvis en tabsfri version af samme optagelse er til rådighed. Dette er nyttigt hvis du har et bibliotek af numre til brug i hjemmet (tabsfri) og en for brug på farten (komprimeret med tab).
 	DE	Erstelle eine Ansicht, in welcher versucht wird, Duplikate zu unterdrücken, indem eine verlustbehaftet komprimierte Version eines Tracks (mp3, m4a etc.) nicht angezeigt wird, falls eine verlustfreie Version verfügbar ist (flac, alac etc.). Dies ist insbesondere hilfreich, wenn Aufnahmen doppelt für zuhause (verlustfrei) und unterwegs (verlustbehaftete) vorhanden sind.
 	EN	Create a library view which tries to suppress duplicate tracks by hiding lossy versions if a lossless version of the same recording is available. This is particularly helpful if you keep a collection of tracks for use at home (lossless) and on the road (lossy).
 	FR	Créer une bibliothèque thématique qui essaie de supprimer les pistes en double en masquant les versions avec perte si une version sans perte du même enregistrement est disponible. Ceci est particulièrement utile si vous avez une collection de morceaux à utiliser à la maison (sans perte) et sur la route (avec perte).
@@ -204,6 +239,7 @@ PLUGIN_EXTENDED_BROWSEMODES_RANDOM_ALBUMS
 	SV	Slumpmässigt valda album
 
 PLUGIN_EXTENDED_BROWSEMODES_RECENTLY_CHANGED
+	DA	Nyligt opdaterede albums
 	DE	Zuletzt aktualisierte Alben
 	EN	Recently Updated Albums
 	FR	Albums modifiés récemment
@@ -228,6 +264,7 @@ PLUGIN_EXTENDED_BROWSEMODES_TOP_TRACKS
 
 PLUGIN_EXTENDED_BROWSEMODES_FLOP_TRACKS
 	CS	Skladby propadáku
+	DA	Mindst afspillede numre
 	DE	Flop-Titel
 	EN	Flop Tracks
 	FR	Morceaux les moins écoutés
@@ -239,6 +276,7 @@ PLUGIN_EXTENDED_BROWSEMODES_FLOP_TRACKS
 
 PLUGIN_EXTENDED_BROWSEMODES_USE_X
 	CS	Použít "%s"
+	DA	Benyt '%s'
 	DE	'%s' verwenden
 	EN	Use '%s'
 	FR	Utiliser '%s'
@@ -250,6 +288,7 @@ PLUGIN_EXTENDED_BROWSEMODES_USE_X
 
 PLUGIN_EXTENDED_BROWSEMODES_USING_X
 	CS	Nyní používáte "%s"
+	DA	Bruger nu '%s'
 	DE	Verwende nun '%s'
 	EN	Now using '%s'
 	FR	Utilise maintenant '%s'
@@ -261,6 +300,7 @@ PLUGIN_EXTENDED_BROWSEMODES_USING_X
 
 PLUGIN_EXTENDED_BROWSEMODES_DELETED
 	CS	Zobrazení knihovny odstraněno
+	DA	Delbibliotek slettet
 	DE	Bibliotheksansicht gelöscht
 	EN	Library View Deleted
 	FR	Bibliothèque thématique supprimée
@@ -272,6 +312,7 @@ PLUGIN_EXTENDED_BROWSEMODES_DELETED
 
 PLUGIN_EXTENDED_BROWSEMODES_AUDIOBOOKS
 	CS	Audioknihy
+	DA	Lydbøger
 	DE	Hörbücher
 	EN	Audiobooks
 	FR	Livres audio
@@ -281,6 +322,7 @@ PLUGIN_EXTENDED_BROWSEMODES_AUDIOBOOKS
 
 PLUGIN_EXTENDED_BROWSEMODES_NO_AUDIOBOOKS
 	CS	Všechna hudba bez audioknih
+	DA	Al musik bortset fra lydbøger
 	DE	Alles ohne Hörbücher
 	EN	All Music without Audiobooks
 	FR	Toute la musique sans les livres audio
@@ -290,6 +332,7 @@ PLUGIN_EXTENDED_BROWSEMODES_NO_AUDIOBOOKS
 
 PLUGIN_EXTENDED_BROWSEMODES_AUDIOBOOKS_DESC
 	CS	Vytvořit zobrazení knihovny audioknih a zobrazení bez audioknih na základě následujících žánrů:
+	DA	Opret et "Lydbøger" delbibliotek og et delbibliotek uden lydbøger baseret på følgende genrer:
 	DE	Erstelle eine "Hörbücher" und eine "Alles ohne Hörbücher" Ansicht, basierend auf den folgenden Stilrichtungen:
 	EN	Create an Audiobooks library view and a view without audio books based on the following genres:
 	FR	Créer une bibliothèque thématique de livres audio et une bibliothèque sans les livres audio en fonction des genres suivants :
@@ -299,6 +342,7 @@ PLUGIN_EXTENDED_BROWSEMODES_AUDIOBOOKS_DESC
 
 PLUGIN_EXTENDED_BROWSEMODES_AUDIOBOOK_GENRES
 	CS	Audiobook, Audiobooks, Spoken, Speech, Comedy, Spoken & Audio, Books & Spoken, Cabaret, Humour, Podcast, Audiokniha, Audioknihy, Mluvené, Řeč, Komedie, Mluvené a audio, Knihy a mluvené, Kabaret, Humor
+	DA	Lydbog, Lydbøger, Tale, Snak, Komedie, Lydbog & Tale, Kabaret, Humor, Podcast, Audiobook, Audiobooks, Spoken, Speech, Spoken & Audio, Books & Spoken, Cabaret, Humour
 	DE	Hörbuch, Hörspiel, Comedy, Cabaret, Humor, Hörbuch & Gesprochene Inhalte, Hörbuch & gesprochene Inhalte, Kabarett, Podcast, Sprache, Audiobook, Audiobooks, Spoken, Speech
 	EN	Audiobook, Audiobooks, Spoken, Speech, Comedy, Spoken & Audio, Books & Spoken, Cabaret, Humour, Podcast
 	FR	Audiobook, Audiobooks, Spoken, Speech, Comedy, Spoken & Audio, Books & Spoken, Cabaret, Humour, Podcast, Livre audio, Livres audio, Parlé, Discours
@@ -308,50 +352,11 @@ PLUGIN_EXTENDED_BROWSEMODES_AUDIOBOOK_GENRES
 
 PLUGIN_EXTENDED_BROWSEMODES_AUTHORS
 	CS	Autoři
+	DA	Lydbogsforfattere
 	DE	Hörbuch-Autoren
 	EN	Authors
 	FR	Auteurs
 	HU	Szerzők
 	NL	Schrijvers
 	SV	Författare
-
-PLUGIN_EXTENDED_BROWSEMODES_TAGS
-	EN	User Defined Roles
-	DE	Benutzerdefinierte Rollen
-	FR	Rôles définis par l'utilisateur
-	HU	Felhasználó által meghatározott szerepkörök
-	ES	Roles definidos por el usuario
-	NL	Door de gebruiker gedefinieerde rollen
-
-PLUGIN_EXTENDED_BROWSEMODES_TAGS_DESC
-	EN	Tell LMS about any custom contributor role tags used in the music library. For example, SOLOIST, DRUMMER, PRODUCER, etc. These can then be used as Contributor Roles in the Additional Browse Modes above. They will also appear as categories when browsing albums or artists with Release Type grouping enabled. Changes here will trigger a rescan of the music library.
-	DE	Informieren Sie LMS über alle benutzerdefinierten Rollen-Tags, die in der Musikbibliothek verwendet werden. Zum Beispiel SOLOIST, DRUMMER, PRODUCER, usw. Diese können dann als Mitwirkende Rollen in den zusätzlichen Suchmodi oben verwendet werden. Sie werden auch als Kategorien angezeigt, wenn Sie Alben oder Künstler mit aktivierter Gruppierung nach Veröffentlichungstyp durchsuchen. Änderungen hier lösen einen erneuten Scan der Musikbibliothek aus.
-	FR	Indiquez à LMS tous les tags de rôles (toutes les contributions) à utiliser dans la bibliothèque musicale. Par exemple, SOLOIST (soliste), DRUMMER (batteur), PRODUCER (producteur), etc. Ces rôles peuvent ensuite être utilisés dans les modes de navigation supplémentaires ci-dessus. Ils apparaîtront également en tant que catégories lorsque vous parcourrez les albums ou les artistes en activant le regroupement par type de sortie. Les modifications apportées ici déclencheront une nouvelle analyse de la bibliothèque musicale.
-	ES	Informe a LMS sobre cualquier etiqueta de rol de colaborador personalizada utilizada en la biblioteca musical. Por ejemplo, SOLISTA, BATERISTA, PRODUCTOR, etc. Estas etiquetas se pueden utilizar como roles de colaborador en los modos de exploración adicionales anteriores. También aparecerán como categorías al explorar álbumes o artistas con la agrupación Tipo de publicación activada. Los cambios que se realicen aquí provocarán una nueva exploración de la biblioteca musical.
-	HU	Mondja el az LMS-nek a zenei könyvtárban használt egyéni közreműködői szerepcímkéket. Például SZÓLISTA, DOBOS, PRODUCER stb. Ezek ezután közreműködői szerepként használhatók a fenti További böngészési módokban. Kategóriaként is megjelennek, ha olyan albumokat vagy előadókat böngész, amelyeknél a Kiadástípusok csoportosítása engedélyezett. Az itt végzett változtatások elindítják a zenei könyvtár újraellenőrzését.
-	NL	Vertel LMS over alle uitvoerende rollen die je hebt getagged in jouw muziekbibliotheek. Bijvoorbeeld SOLOIST, DRUMMER, PRODUCER, enz. Deze kunnen dan worden gebruikt als uitvoerende rollen in de additionele blader modi hierboven. Ze verschijnen ook als categorieën wanneer je door albums of artiesten bladert met de Release Type groepering ingeschakeld. Als je hier wijzigingen aanbrengt, wordt de muziekbibliotheek opnieuw gescand.
-
-PLUGIN_EXTENDED_BROWSEMODES_ROLE
-	EN	Role tag
-	DE	Rolle tag
-	FR	Tag Rôle
-	ES	Role tag
-	HU	Szerepcímke
-	NL	Rol tag
-
-PLUGIN_EXTENDED_BROWSEMODES_ROLE_TEXT
-	EN	Display text
-	DE	Text anzeigen
-	FR	Afficher le texte
-	ES	Mostrar texto
-	HU	Szöveg megjelenítése
-	NL	Tekst weergeven
-
-PLUGIN_EXTENDED_BROWSEMODES_ROLE_INCLUDE
-	EN	Include with artist lists
-	DE	In Künstlerlisten aufnehmen
-	FR	Inclure dans les listes d'artistes
-	ES	Incluir con listas de artistas
-	HU	Tartalmazza az előadók listáját
-	NL	Opnemen bij artiestenlijsten
 

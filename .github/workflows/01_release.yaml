@@ -1,0 +1,26 @@
+name: Release LMS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  docker:
+    name: Tag release candidate on Docker as `latest`
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Add `latest` tag to release candidate
+        run: docker buildx imagetools create lmscommunity/lyrionmusicserver:rc --tag lmscommunity/lyrionmusicserver:latest
+
+      # should we remove the `rc` tag?
+
+  # more jobs to be added as we better understand the overall process

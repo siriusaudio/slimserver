@@ -15,7 +15,7 @@ use strict;
 
 BEGIN {
 	use Exporter::Lite;
-	use constant PARTNER_ID  => 15;
+	use constant PARTNER_ID => 16;
 	our @EXPORT_OK = qw(PARTNER_ID);
 }
 
@@ -80,7 +80,7 @@ use constant MENUS => {
 	},
 };
 
-use constant MAIN_URL    => 'http://opml.radiotime.com/Index.aspx?partnerId=16';
+use constant MAIN_URL    => 'http://opml.radiotime.com/Index.aspx?partnerId=' . PARTNER_ID;
 use constant ERROR_URL   => 'http://opml.radiotime.com/Report.ashx?c=stream&partnerId=' . PARTNER_ID;
 use constant PRESETS_URL => 'http://opml.radiotime.com/Browse.ashx?c=presets&partnerId=' . PARTNER_ID;
 use constant OPTIONS_URL => 'http://opml.radiotime.com/Options.ashx?partnerId=' . PARTNER_ID . '&id=';
@@ -142,7 +142,7 @@ sub parseMenu {
 			$item->{weight} = $weight;
 
 			while (my ($k, $v) = each %$item) {
-				$v =~ s/(partnerId=)16/$1${\PARTNER_ID}/ig;
+				$v =~ s/(partnerId=)${\PARTNER_ID}/${1}15/ig;
 				$item->{$k} = $v;
 			}
 
@@ -219,7 +219,7 @@ sub fixUrl {
 
 	$rtinfo->{serial}    ||= $class->getSerial($client);
 	$rtinfo->{partnerId} ||= PARTNER_ID;
-	$rtinfo->{partnerId}  =~ s/(partnerId=)16\b/$1${\PARTNER_ID}/ig;
+	$rtinfo->{partnerId}  =~ s/(partnerId=)${\PARTNER_ID}\b/${1}15/ig;
 	$rtinfo->{username}  ||= $class->getUsername if $feed =~ /presets/;
 	$rtinfo->{formats}     = join(',', @formats);
 	$rtinfo->{id}          = $rtinfo->{sid} || $rtinfo->{id};
@@ -275,36 +275,6 @@ sub setUsername {
 	return if !$username || $prefs->get('username');
 
 	$prefs->set('username', $username);
-}
-
-sub reportError {
-	my ($class, $url, $error) = @_;
-
-	return unless $error && $url =~ m{^https?://[^/](?:radiotime|tunein)\.com};
-
-	my ($id) = $url =~ /\bid\b=([a-z0-9]+)/;
-	if ( $id ) {
-		my $reportUrl = ERROR_URL
-			. '&id=' . uri_escape_utf8($id)
-			. '&message=' . uri_escape_utf8($error);
-
-		main::INFOLOG && $log->is_info && $log->info("Reporting stream failure to TuneIn: $reportUrl");
-
-		my $http = Slim::Networking::SimpleAsyncHTTP->new(
-			sub {
-				main::INFOLOG && $log->is_info && $log->info("TuneIn failure report OK");
-			},
-			sub {
-				my $http = shift;
-				main::INFOLOG && $log->is_info && $log->info( "TuneIn failure report failed: " . $http->error );
-			},
-			{
-				timeout => 30,
-			},
-		);
-
-		$http->get($reportUrl);
-	}
 }
 
 1;

@@ -10,13 +10,18 @@ use strict;
 use base qw(Slim::Utils::OS);
 
 use Config;
+use File::Basename qw(dirname);
 use File::Path;
 use File::Spec::Functions qw(:ALL);
 use FindBin qw($Bin);
 use POSIX qw(LC_CTYPE LC_TIME);
 
-# the new menubar item comes as an application in something like "Lyrion Music Server.app/Contents/Resources/server"
-use constant IS_MENUBAR_ITEM => $Bin =~ m|app/Contents/Resources/server| ? 1 : 0;
+# the new menubar item comes as an application in something like "Lyrion Music Server.app/Contents/MacOS"
+use constant IS_MENUBAR_ITEM => $Bin =~ m|app/Contents/| ? 1 : 0;
+use constant CHECK_MENUBAR_ITEM_DURATION => 30;
+
+# Enable this for update checker testing/development
+use constant UPGRADE_TESTING => 0;
 
 my $canFollowAlias;
 
@@ -97,6 +102,13 @@ sub initPrefs {
 	$prefs->{libraryname} =~ s/\x{2019}/'/;
 }
 
+sub postInitPrefs {
+	my ($class, $prefs) = @_;
+	$prefs->setChange(sub {
+		handleMenuBarItemActivity();
+	}, 'macMenuItemActive');
+}
+
 sub canDBHighMem { 1 }
 
 sub canFollowAlias {
@@ -120,6 +132,12 @@ sub initSearchPath {
 
 	my @paths = ();
 
+	# The application bundle has moved binaries due to Apple's requirements for notarization
+	if ($Bin =~ m|(.*app/Contents/)Resources/server|) {
+		push @paths, catdir($1, 'MacOS');
+	}
+
+	push @paths, dirname($^X);
 	push @paths, $ENV{'HOME'} ."/Library/iTunes/Scripts/iTunes-LAME.app/Contents/Resources/";
 	push @paths, (split(/:/, $ENV{'PATH'}), qw(/usr/bin /usr/local/bin /usr/libexec /sw/bin /usr/sbin /opt/local/bin));
 
@@ -144,8 +162,9 @@ sub dirsFor {
 	if ($dir =~ /^(?:strings|revision|convert|types|repositories)$/) {
 
 		push @dirs, $Bin;
+		push @dirs, $class->dirsFor('prefs');
 
-	} elsif ($dir =~ /^(?:Graphics|HTML|IR|Plugins|MySQL)$/) {
+	} elsif ($dir =~ /^(?:Graphics|HTML|IR|Plugins)$/) {
 
 		push @dirs, "$ENV{'HOME'}/Library/Application Support/Squeezebox/$dir";
 		push @dirs, catdir($Bin, $dir);
@@ -195,7 +214,7 @@ sub dirsFor {
 		push @dirs, "$Bin/../..";
 
 	# we don't want these values to return a value
-	} elsif ($dir =~ /^(?:libpath|mysql-language)$/) {
+	} elsif ($dir =~ /^(?:libpath)$/) {
 
 	} else {
 
@@ -281,6 +300,11 @@ sub getSystemLanguage {
 sub ignoredItems {
 	return (
 		# Items we should ignore on a mac volume
+		'Applications' => '/',
+		'Library'      => '/',
+		'System'       => '/',
+		'Macintosh HD' => 1,
+		'com.apple.TimeMachine.localsnapshots' => 1,
 		'Icon' => '/',
 		'TheVolumeSettingsFolder' => 1,
 		'TheFindByContentFolder' => 1,
@@ -382,8 +406,7 @@ sub initUpdate {
 		# don't nag too often...
 		$interval = 6*3600 if $interval < 6*3600;
 
-		require File::Basename;
-		my $folder = File::Basename::dirname($script);
+		my $folder = dirname($script);
 
 		my $envVariables;
 		if (IS_MENUBAR_ITEM) {
@@ -407,6 +430,7 @@ sub initUpdate {
 	<string>$plistLabel</string>
 	<key>ProgramArguments</key>
 	<array>
+		<string>$^X</string>
 		<string>$script</string>
 	</array>
 	$envVariables
@@ -460,17 +484,9 @@ sub installerExtension {
 	my $updateFolder = $_[0]->dirsFor('updates');
 
 	# remove installer from old installation
-	Slim::Utils::Misc::deleteFiles($updateFolder, qr/^LogitechMediaServer.*\.pkg$/i);
+	Slim::Utils::Misc::deleteFiles($updateFolder, qr/^L.*M.*Server.*\.(pkg|zip)$/i);
 
-	if (IS_MENUBAR_ITEM) {
-		# remove pref pane installer
-		Slim::Utils::Misc::deleteFiles($updateFolder, qr/^LyrionMusicServer.*\.pkg$/i);
-		return 'dmg';
-	};
-
-	# remove menu bar item installer
-	Slim::Utils::Misc::deleteFiles($updateFolder, qr/^LyrionMusicServer.*\.zip$/i);
-	return 'pkg';
+	return 'dmg';
 };
 
 sub installerOS { IS_MENUBAR_ITEM ? 'macos' : 'osx' }
@@ -488,6 +504,54 @@ sub restartServer {
 	}
 
 	return 0;
+}
+
+sub handleMenuBarItemActivity {
+	Slim::Utils::Timers::killTimers(undef, \&handleMenuBarItemActivity);
+
+	my $log = Slim::Utils::Log::logger('server');
+
+	my $proc = `ps -A | egrep 'Contents/MacOS/Lyrion Music Server\$' | grep -v grep`;
+	if (!$proc) {
+		main::INFOLOG && $log->is_info && $log->info('The Menu Bar Item has quit - let\'s quit the service, too');
+		main::stopServer();
+		return;
+	}
+
+	my $diff = time() - Slim::Utils::Prefs::preferences('server')->get('macMenuItemActive');
+	if ($diff < CHECK_MENUBAR_ITEM_DURATION) {
+		my $nextCheck = $diff * 0.25 + 1;
+		main::INFOLOG && $log->is_info && $log->info('Checking for Menu Bar Item status again in ' . $nextCheck);
+		Slim::Utils::Timers::setTimer(undef, Time::HiRes::time() + $nextCheck, \&handleMenuBarItemActivity);
+	}
+	elsif (main::INFOLOG && $log->is_info) {
+		$log->info('The Menu Bar Item is still running - let\'s keep the service running');
+	}
+}
+
+# if update checker testing is enabled, return false, even if we're running from source
+# this really should only be used when I'm testing locally - mh
+my $updateCheckInitialized;
+sub runningFromSource {
+	my $isRunningFromSource = shelf->SUPER::runningFromSource(@_);
+
+	if (UPGRADE_TESTING && $isRunningFromSource) {
+		return if $updateCheckInitialized++;
+
+		require Slim::Utils::Update;
+		Slim::Utils::Timers::setTimer(
+			undef,
+			time() + 3,
+			\&Slim::Utils::Update::checkVersion,
+		);
+
+		# reset the last time we checked for updates so we check immediately
+		Slim::Utils::Prefs::preferences('server')->set('checkVersionLastTime', 0);
+
+		return 1;
+	}
+
+	return $isRunningFromSource;
 }
 
 1;

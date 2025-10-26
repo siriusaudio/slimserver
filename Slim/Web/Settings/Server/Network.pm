@@ -25,7 +25,7 @@ sub page {
 }
 
 sub prefs {
-	my @prefs = qw(webproxy httpport bufferSecs remotestreamtimeout maxWMArate useEnhancedHTTP);
+	my @prefs = qw(webproxy httpport bufferSecs remotestreamtimeout maxRedirects maxWMArate useEnhancedHTTP);
 
 	# only show following for SLIMP3
 	if ($Slim::Player::SLIMP3::SLIMP3Connected) {

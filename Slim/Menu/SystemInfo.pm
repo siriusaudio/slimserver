@@ -50,7 +50,7 @@ sub name {
 
 ##
 # Register all the information providers that we provide.
-# This order is defined at http://wiki.slimdevices.com/index.php/UserInterfaceHierarchy
+# This order is defined at https://wiki.lyrion.org/index.php/UserInterfaceHierarchy
 #
 sub registerDefaultInfoProviders {
 	my $class = shift;
@@ -204,7 +204,7 @@ sub infoLibrary {
 
 	elsif (Slim::Music::Import->stillScanning) {
 		return {
-			name => cstring($client, 'RESCANNING_SHORT'),
+			name => cstring($client, 'RESCANNING'),
 
 			web  => {
 				hide => 1,

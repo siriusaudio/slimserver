@@ -354,7 +354,7 @@ sub _getBrowsePrefs {
 	my $cacheKey = $serverId . '_prefs';
 	my $cached = $cache->get($cacheKey) || {};
 
-	foreach my $pref ( 'noGenreFilter', 'noRoleFilter', 'useUnifiedArtistsList', 'composerInArtists', 'conductorInArtists', 'bandInArtists', 'trackartistInArtists' ) {
+	foreach my $pref ( 'noGenreFilter', 'noRoleFilter', 'useUnifiedArtistsList', 'composerInArtists', 'conductorInArtists', 'bandInArtists', 'trackartistInArtists', 'userDefinedRoles', 'artistAlbumLink', 'albumartistAlbumLink', 'trackartistAlbumLink', 'composerAlbumLink', 'conductorAlbumLink', 'bandAlbumLink' ) {
 		if (!defined $cached->{$pref} && !$passwordProtected{$serverId}) {
 			push @prefsFetcher, sub {
 				__PACKAGE__->remoteRequest($serverId,

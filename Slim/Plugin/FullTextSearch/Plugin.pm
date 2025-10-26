@@ -70,7 +70,7 @@ use constant SQL_CREATE_WORKTEMP => q{
 
 use constant SQL_CREATE_WORK_ITEM => q{
 	INSERT %s INTO fulltext (id, type, w10, w5, w3, w1)
-		
+
 		SELECT 'YXLWORKSYYYYYYYYYYYYYYYYYYYYYYYY' || works.id, 'work',
 		-- weight 10
 		UNIQUE_TOKENS(LOWER(IFNULL(works.title, '')) || ' ' || IFNULL(works.titlesearch, '') || ' ' || IFNULL(contributors.namesearch, '')),
@@ -95,7 +95,7 @@ use constant SQL_CREATE_ALBUM_ITEM => q{
 	INSERT %s INTO fulltext (id, type, w10, w5, w3, w1)
 		SELECT 'YXLALBUMSYYYYYYYYYYYYYYYYYYYYYYY' || albums.id, 'album',
 		-- weight 10
-		UNIQUE_TOKENS(LOWER(IFNULL(albums.title, '')) || ' ' || IFNULL(albums.titlesearch, '') || ' ' || IFNULL(albums.customsearch, '') || ' ' 
+		UNIQUE_TOKENS(LOWER(IFNULL(albums.title, '')) || ' ' || IFNULL(albums.titlesearch, '') || ' ' || IFNULL(albums.customsearch, '') || ' '
 		|| IFNULL((SELECT GROUP_CONCAT(wt,' ') FROM (SELECT DISTINCT works.titlesearch wt FROM tracks JOIN works ON tracks.work = works.id WHERE tracks.album = albums.id) ), ' ') ),
 		-- weight 5
 		IFNULL(albums.year, ''),
@@ -306,7 +306,14 @@ sub dropHelperTable {
 sub parseSearchTerm {
 	my ($class, $search, $type) = @_;
 
+	# We're struggling with non-latin characters on Windows, but I'm not sure whether it's a scan or a search time issue...
+	# https://forums.lyrion.org/forum/developer-forums/developers/1747258
+	$search = Slim::Utils::Unicode::utf8toLatin1Transliterate($search) if main::ISWINDOWS;
+
 	$search = lc($search || '');
+
+	# replace iOS' smart quotes with regular quotes
+	$search =~ s/[“”„\x{201c}\x{201d}\x{201e}]/"/g;
 
 	# Check if we have an open double quote and close it if needed
 	my $c = () = $search =~ /"/g;
@@ -504,10 +511,7 @@ sub _uniqueTokens {
 		$text = Slim::Utils::Text::ignoreCaseArticles($text, 0, 1);
 	}
 
-	my %seen;
-	return join(' ', grep {
-		!$seen{$_}++
-	} split(/\s/, $text));
+	return join(' ', Slim::Utils::Misc::uniq(split(/\s/, $text)));
 }
 
 sub _rebuildIndex {
@@ -518,7 +522,7 @@ sub _rebuildIndex {
 	my $dbh = Slim::Schema->dbh;
 
 	# the "max" db memory settings can lead to OOM crashes when run in the server - use smaller cache temporarily
-	# see https://forums.slimdevices.com/showthread.php?116308 (using a 1M track collection...)
+	# see https://forums.lyrion.org/showthread.php?116308 (using a 1M track collection...)
 	$dbh->do("PRAGMA cache_size = 20000") if preferences('server')->get('dbhighmem') && !main::SCANNER;
 
 	$scanlog->error("Initialize fulltext table");
@@ -595,6 +599,7 @@ sub _rebuildIndex {
 
 	$progress && $progress->update(string('DBOPTIMIZE_PROGRESS'));
 	Slim::Schema->forceCommit if main::SCANNER;
+	main::idleStreams() unless main::SCANNER;
 
 	$dbh->do("DROP TABLE IF EXISTS fulltext_terms;") or $scanlog->error($dbh->errstr);
 	$dbh->do("CREATE VIRTUAL TABLE fulltext_terms USING fts4aux(fulltext);") or $scanlog->error($dbh->errstr);
@@ -627,34 +632,43 @@ sub _initPopularTerms {
 
 	main::DEBUGLOG && $log->is_debug && $log->debug("Analyzing most popular tokens");
 
+	if (!_ftExists() && !$scanDone) {
+		$scanlog->error("Fulltext index missing or outdated - re-building");
+
+		$prefs->remove('popularTerms');
+		_rebuildIndex();
+	}
+
+	if (_ftExists()) {
+		# get a list of terms which occur more than LARGE_RESULTSET times in our database
+		my $terms = Slim::Schema->dbh->selectcol_arrayref( sprintf(qq{
+			SELECT term FROM (
+				SELECT term, SUM(documents) d
+				FROM fulltext_terms
+				WHERE NOT col IN ('*', 1, 0) AND LENGTH(term) > 1
+				GROUP BY term
+			)
+			WHERE d > %i
+		}, LARGE_RESULTSET) );
+
+		$prefs->set('popularTerms', $terms);
+		$popularTerms = join('|', @{$prefs->get('popularTerms')});
+
+		main::DEBUGLOG && $log->is_debug && $log->debug(sprintf("Found %s popular tokens", scalar @$terms));
+	}
+	else {
+		$log->warn("Fulltext index missing - can't analyze popular terms");
+	}
+}
+
+sub _ftExists {
 	my $dbh = Slim::Schema->dbh;
 
 	my ($ftExists) = $dbh->selectrow_array( qq{ SELECT name FROM sqlite_master WHERE type='table' AND name='fulltext' } );
 	($ftExists) = $dbh->selectrow_array( qq{ SELECT name FROM sqlite_master WHERE type='table' AND name='fulltext_terms' } ) if $ftExists;
 	($ftExists) = $dbh->selectrow_array( qq{ SELECT id FROM fulltext WHERE fulltext.id MATCH 'YXLALBUM*' } ) if $ftExists;     # 8.3: IDs must be prefixed to make them "non searchable"
 
-	if (!$ftExists) {
-		$scanlog->error("Fulltext index missing or outdated - re-building");
-
-		$prefs->remove('popularTerms');
-		_rebuildIndex() unless $scanDone;
-	}
-
-	# get a list of terms which occur more than LARGE_RESULTSET times in our database
-	my $terms = $dbh->selectcol_arrayref( sprintf(qq{
-		SELECT term FROM (
-			SELECT term, SUM(documents) d
-			FROM fulltext_terms
-			WHERE NOT col IN ('*', 1, 0) AND LENGTH(term) > 1
-			GROUP BY term
-		)
-		WHERE d > %i
-	}, LARGE_RESULTSET) );
-
-	$prefs->set('popularTerms', $terms);
-	$popularTerms = join('|', @{$prefs->get('popularTerms')});
-
-	main::DEBUGLOG && $log->is_debug && $log->debug(sprintf("Found %s popular tokens", scalar @$terms));
+	return $ftExists;
 }
 
 sub postDBConnect {

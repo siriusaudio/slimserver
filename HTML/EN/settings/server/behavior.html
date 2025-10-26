@@ -1,4 +1,7 @@
 [% PROCESS settings/header.html %]
+
+[% SET numberOfRoleCols = 3 %]
+
 	[% WRAPPER settingSection %]
 		[% WRAPPER settingGroup title="SETUP_ARTISTS_BROWSE_MODES" desc="SETUP_ARTISTS_BROWSE_MODES_DESC" %]
 			<select class="stdedit" name="pref_useUnifiedArtistsList" id="useUnifiedArtistsList">[% prefs.pref_useUnifiedArtistsList %]
@@ -10,28 +13,73 @@
 		[% END %]
 	[% END %]
 
-	[% IF prefs.pref_useUnifiedArtistsList; WRAPPER settingSection %]
-		[% WRAPPER settingGroup title="SETUP_COMPOSERINARTISTS" desc="SETUP_COMPOSERINARTISTS_DESC" %]
-			<input type="checkbox" [% IF prefs.pref_trackartistInArtists %]checked="1" [% END %] class="stdedit" name="pref_trackartistInArtists" id="trackartistInArtists" value="1" />
-			<label for="trackartistInArtists" class="stdlabel">[% "TRACKARTIST" | string %]</label><br>
-
-			<input type="checkbox" [% IF prefs.pref_composerInArtists %]checked="1" [% END %] class="stdedit" name="pref_composerInArtists" id="composerInArtists" value="1" />
-			<label for="composerInArtists" class="stdlabel">[% "COMPOSER" | string %]</label><br>
-
-			<input type="checkbox" [% IF prefs.pref_conductorInArtists %]checked="1" [% END %] class="stdedit" name="pref_conductorInArtists" id="conductorInArtists" value="1" />
-			<label for="conductorInArtists" class="stdlabel">[% "CONDUCTOR" | string %]</label><br>
-
-			<input type="checkbox" [% IF prefs.pref_bandInArtists %]checked="1" [% END %] class="stdedit" name="pref_bandInArtists" id="bandInArtists" value="1" />
-			<label for="bandInArtists" class="stdlabel">[% "BAND" | string %]</label>
+	[% IF prefs.pref_useUnifiedArtistsList || userRoleCount %]
+		[% WRAPPER settingSection %]
+			[% WRAPPER settingGroup title="SETUP_ROLESINARTISTS" desc="SETUP_ROLESINARTISTS_DESC" %]
+			<table>
+				<tr>
+				[% SET counter = 0 %]
+				[% FOREACH role = menuRoles %]
+					[% IF !role.hidden %]
+						[% SET counter = counter + 1 %]
+						<td><input type="checkbox" [% IF role.selected %]checked="1" [% END %] class="stdedit" name="pref_[% role.name %]InArtists" id="[% role.name %]InArtists" value="1" />
+						<label for="[% role.name %]InArtists" class="stdlabel">[% role.name | string %]</label></td>
+						<td />
+						[% IF counter % numberOfRoleCols == 0 %] </tr><tr> [% END %]
+					[% ELSE %]
+						<input type="hidden" name="pref_[% role.name %]InArtists" value="[% role.selected | html %]" />
+					[% END %]
+				[% END %]
+				</tr>
+			</table>
+			[% END %]
 		[% END %]
-	[% END; ELSE %]
-		<input type="hidden" name="pref_trackartistInArtists" value="[% prefs.pref_trackartistInArtists | html %]" />
-		<input type="hidden" name="pref_composerInArtists" value="[% prefs.pref_composerInArtists | html %]" />
-		<input type="hidden" name="pref_conductorInArtists" value="[% prefs.pref_conductorInArtists | html %]" />
-		<input type="hidden" name="pref_bandInArtists" value="[% prefs.pref_bandInArtists | html %]" />
-		<input type="hidden" name="pref_variousArtistAutoIdentification" value="[% prefs.pref_variousArtistAutoIdentification | html %]" />
+	[% ELSE %]
+		[% FOREACH role = menuRoles %]
+			<input type="hidden" name="pref_[% role.name %]InArtists" value="[% role.selected | html %]" />
+		[% END %]
 	[% END %]
 
+	[% WRAPPER settingSection %]
+		[% WRAPPER settingGroup title="SETUP_ALBUMLINKROLES" desc="SETUP_ALBUMLINKROLES_DESC" %]
+			<table>
+				<tr>
+				[% SET counter = 0 %]
+				[% FOREACH role = linkRoles %]
+					[% SET counter = counter + 1 %]
+					<td><input type="checkbox" [% IF role.selected %]checked="1" [% END %] class="stdedit" name="pref_[% role.name %]AlbumLink" id="[% role.name %]AlbumLink" value="1" />
+					<label for="[% role.name %]AlbumLink" class="stdlabel">[% role.name | string %]</label></td>
+					<td />
+					[% IF counter % numberOfRoleCols == 0 %] </tr><tr> [% END %]
+				[% END %]
+				</tr>
+			</table>
+		[% END %]
+	[% END %]
+
+	[% WRAPPER settingSection %]
+		[% WRAPPER settingGroup title="SETUP_USERDEFINEDROLES" desc="SETUP_USERDEFINEDROLES_DESC" %]
+			<table>
+				<tr>
+					<th>[% "SETUP_USERDEFINEDROLES_TAG" | string %]</th>
+					<th>[% "SETUP_USERDEFINEDROLES_TEXT" | string %]</th>
+					<th>[% "SETUP_USERDEFINEDROLES_TEXT_PLURAL" | string %]</th>
+				</tr>
+				[% FOREACH tag = customTags.keys.sort %]
+					<tr>
+						<td><input type="text" name="[% tag | html %]_tag" value="[% tag | html %]" class="stdedit"/></td>
+						<td><input type="text" name="[% tag | html %]_name" value="[% customTags.$tag.name | html %]" class="stdedit" style="width: 200px;"/></td>
+						<td><input type="text" name="[% tag | html %]_namePlural" value="[% customTags.$tag.namePlural | html %]" class="stdedit" style="width: 200px;"/></td>
+					</tr>
+				[% END %]
+				<tr>
+					<td><input type="text" name="new_tag" value="" class="stdedit"/></td>
+					<td><input type="text" name="new_name" value="" class="stdedit" style="width: 200px;"/></td>
+					<td><input type="text" name="new_namePlural" value="" class="stdedit" style="width: 200px;"/></td>
+				</tr>
+			</table>
+		[% END %]
+	[% END %]
 
 	[% WRAPPER settingSection %]
 		[% IF prefs.pref_useUnifiedArtistsList %]
@@ -41,18 +89,33 @@
 				<input type="radio" name="pref_variousArtistAutoIdentification" id="pref_variousArtistAutoIdentification1" value="1" [% IF prefs.pref_variousArtistAutoIdentification %]checked="checked"[% END %] />
 				<label for="pref_variousArtistAutoIdentification1" class="stdlabel">[% 'SETUP_VARIOUSARTISTAUTOIDENTIFICATION_1' | getstring %]</label>
 			[% END %]
+		[% ELSE %]
+			<input type="hidden" name="pref_variousArtistAutoIdentification" value="[% prefs.pref_variousArtistAutoIdentification | html %]" />
 		[% END %]
 
-		[% WRAPPER settingGroup title="" desc="SETUP_USETPE2ASALBUMARTIST_DESC"%]
+		[% WRAPPER settingGroup title= prefs.pref_useUnifiedArtistsList ? "" : "SETUP_VARIOUSARTISTS"; desc=""%]
+			<div class="prefDesc">[% "SETUP_VARIOUSARTISTSSTRING_DESC" | string %]</div>
+			<input type="text"class="stdedit" name="pref_variousArtistsString" id="variousArtistsString" value="[% prefs.pref_variousArtistsString | html %]" size="40" placeholder="[% "VARIOUSARTISTS" | string | html %]">
+		[% END %]
+
+		[% WRAPPER settingGroup title="MP3" desc="SETUP_USETPE2ASALBUMARTIST_DESC"%]
 			<input type="radio" name="pref_useTPE2AsAlbumArtist" id="pref_useTPE2AsAlbumArtist0" value="0" [% IF NOT prefs.pref_useTPE2AsAlbumArtist %]checked="checked"[% END %] />
 			<label for="pref_useTPE2AsAlbumArtist0" class="stdlabel">[% 'SETUP_USETPE2ASALBUMARTIST_0' | getstring %]</label><br/>
 			<input type="radio" name="pref_useTPE2AsAlbumArtist" id="pref_useTPE2AsAlbumArtist1" value="1" [% IF prefs.pref_useTPE2AsAlbumArtist %]checked="checked"[% END %] />
 			<label for="pref_useTPE2AsAlbumArtist1" class="stdlabel">[% 'SETUP_USETPE2ASALBUMARTIST_1' | getstring %]</label><br/>
 		[% END %]
 
-		[% WRAPPER settingGroup title="" desc=""%]
-			<div class="prefDesc">[% "SETUP_VARIOUSARTISTSSTRING_DESC" | string %]</div>
-			<input type="text"class="stdedit" name="pref_variousArtistsString" id="variousArtistsString" value="[% prefs.pref_variousArtistsString | html %]" size="40" placeholder="[% "VARIOUSARTISTS" | string | html %]">
+		[% WRAPPER settingGroup title="SETUP_MYCLASSICALGENRES" desc="SETUP_MYCLASSICALGENRES_DESC" %]
+			<input type="text" class="stdedit" name="pref_myClassicalGenres" id="myClassicalGenres" value="[% prefs.pref_myClassicalGenres | html %]" size="40" placeholder="[% "GENRES" | string | html %]"><br/>
+		[% END %]
+
+		[% WRAPPER settingGroup title="SETUP_WORKSSCAN" desc="" %]
+			<input type="radio" name="pref_worksScan" id="pref_worksScan0" value="0" [% IF prefs.pref_worksScan == 0 %]checked="checked"[% END %] />
+			<label for="pref_worksScan0" class="stdlabel">[% 'SETUP_WORKSSCAN_0' | getstring %]</label><br/>
+			<input type="radio" name="pref_worksScan" id="pref_worksScan1" value="1" [% IF prefs.pref_worksScan == 1 %]checked="checked"[% END %] />
+			<label for="pref_worksScan1" class="stdlabel">[% 'SETUP_WORKSSCAN_1' | getstring %]</label><br/>
+			<input type="radio" name="pref_worksScan" id="pref_worksScan2" value="2" [% IF prefs.pref_worksScan == 2 %]checked="checked"[% END %] />
+			<label for="pref_worksScan2" class="stdlabel">[% 'SETUP_WORKSSCAN_2' | getstring %]</label><br/>
 		[% END %]
 	[% END %]
 
@@ -102,10 +165,8 @@
 			<label for="pref_showComposerReleasesbyAlbum1" class="stdlabel">[% 'SETUP_RELEASE_TYPES_COMPOSER_ROLE_GROUPING_1' | getstring %]</label><br/>
 			<input type="radio" name="pref_showComposerReleasesbyAlbum" id="pref_showComposerReleasesbyAlbum2" value="2" [% IF prefs.pref_showComposerReleasesbyAlbum == 2 %]checked="checked"[% END %] />
 			<label for="pref_showComposerReleasesbyAlbum2" class="stdlabel">[% 'SETUP_RELEASE_TYPES_COMPOSER_ROLE_GROUPING_2' | getstring %]</label>
-			<input type="text" class="stdedit" name="pref_showComposerReleasesbyAlbumGenres" id="showComposerReleasesbyAlbumGenres" value="[% prefs.pref_showComposerReleasesbyAlbumGenres | html %]" size="40" placeholder="[% "GENRES" | string | html %]"><br/>
 		[% END; ELSE %]
 			<input type="hidden" name="pref_showComposerReleasesbyAlbum" value="[% prefs.pref_showComposerReleasesbyAlbum %]" />
-			<input type="hidden" name="pref_showComposerReleasesbyAlbumGenres" value="[% prefs.pref_showComposerReleasesbyAlbumGenres %]" />
 		[% END %]
 	[% END %]
 
