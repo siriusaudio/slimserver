@@ -427,8 +427,8 @@ sub _CheckPaused {	# only called when PAUSED
 	return if ! $self->isPaused();	# safety check
 
 	my $song = $self->playingSong();
+
 	if (   $song
-		&& $song->currentTrackHandler()->isRemote()
 		&& $self->master()->usage() > 0.98)
 	{
 		if ($song->canSeek() && defined $self->{'resumeTime'}) {
@@ -2083,7 +2083,7 @@ sub playerInactive {
 	my $i = 0;
 	foreach my $c (@{$self->{'players'}}) {
 		if ($c == $player) {
-
+			_stopClient($player);
 			if (!isStopped($self)) {
 				if (@{$self->{'players'}} == 1) {
 					# If player is our last active player, then stop

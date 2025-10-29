@@ -156,7 +156,6 @@ sub play {
 	logError("play enter");
 	my $client = shift;
 	my $params = shift;
-	
 	my $controller = $params->{'controller'};
 	my $handler = $controller->currentTrackHandler();
 	
@@ -172,7 +171,6 @@ sub play {
 	$decoded =~ s/\)/\\\)/g;
 	$decoded =~ s/\?/\\?/g;
 	$decoded =~ s/file:\/\///g;
-	$decoded =~ s/youtube:\/\//https:\/\//g;
 
 	my $seekdata = 0;
 	my $seekd = $controller->song->seekdata;
@@ -190,9 +188,7 @@ sub play {
         open(my $json_out, ">", '/var/lib/squeezeboxserver/play_command.json');
         print {$json_out} $json;
         logError("json done");
-	if (`cat /var/lib/squeezeboxserver/.slimnotif` != 1){
-		system("inotifywait -t 10 /var/lib/squeezeboxserver/.slimnotif");
-	}
+	system("inotifywait -t 10 /var/lib/squeezeboxserver/.slimnotif");
 	logError("squeezelite goes");
 
 	# Calculate the correct buffer threshold for remote URLs
@@ -234,6 +230,18 @@ sub play {
 # pause
 #
 sub pause {
+	
+	logError("pause called");
+	my $client = shift;
+	system("echo \"0\" > /var/lib/squeezeboxserver/.slimnotif");
+
+	my %rec_hash = ('command'=>"pause");
+	my $json = encode_json \%rec_hash;
+	open(my $json_out, ">", '/var/lib/squeezeboxserver/play_command.json');
+	print {$json_out} $json;
+
+	system("inotifywait -t 10 /var/lib/squeezeboxserver/.slimnotif");
+
 	my $client = shift;
 	$client->stream('p');
 	$client->playPoint(undef);
@@ -242,18 +250,18 @@ sub pause {
 }
 
 sub stop {
+
 	logError("stop called");
+	
 	my $client = shift;
 	system("echo \"0\" > /var/lib/squeezeboxserver/.slimnotif");
 
 	my %rec_hash = ('command'=>"stop");
-        my $json = encode_json \%rec_hash;
-        open(my $json_out, ">", '/var/lib/squeezeboxserver/play_command.json');
-        print {$json_out} $json;
+	my $json = encode_json \%rec_hash;
+	open(my $json_out, ">", '/var/lib/squeezeboxserver/play_command.json');
+	print {$json_out} $json;
 
-	if (`cat /var/lib/squeezeboxserver/.slimnotif` != 1){
-		system("inotifywait -t 10 /var/lib/squeezeboxserver/.slimnotif");
-	}
+	system("inotifywait -t 10 /var/lib/squeezeboxserver/.slimnotif");
 
 	$client->stream('q');
 	$client->playPoint(undef);
