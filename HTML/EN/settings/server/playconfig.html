@@ -1,0 +1,52 @@
+[% PROCESS settings/header.html %]
+
+	[% WRAPPER settingSection %]
+		[% WRAPPER settingGroup title="PLAYCONFIG_DSD_RATE" desc="" %]
+			<select class="stdedit" name="pref_dsd_rate" id="dsd_rate">
+				<option value="64" [% IF prefs.dsd_rate == 64 %]selected[% END %]>64</option>
+				<option value="128" [% IF prefs.dsd_rate == 128 %]selected[% END %]>128</option>
+				<option value="256" [% IF prefs.dsd_rate == 256 %]selected[% END %]>256</option>
+				<option value="512" [% IF prefs.dsd_rate == 512 %]selected[% END %]>512</option>
+				<option value="1024" [% IF prefs.dsd_rate == 1024 %]selected[% END %]>1024</option>
+			</select>
+		[% END %]
+		
+		[% WRAPPER settingGroup title="PLAYCONFIG_DSD_CONVERT" desc="" %]
+			<input type="checkbox" class="stdedit" name="pref_dsd_convert" id="dsd_convert" value="1" [% IF prefs.dsd_convert %]checked[% END %]>
+		[% END %]
+		
+		[% WRAPPER settingGroup title="PLAYCONFIG_DSD_NATIVE" desc="" %]
+			<input type="checkbox" class="stdedit" name="pref_dsd_native" id="dsd_native" value="1" [% IF prefs.dsd_native %]checked[% END %]>
+		[% END %]
+		
+		[% WRAPPER settingGroup title="PLAYCONFIG_ALSA_CARD" desc="" %]
+			<select class="stdedit" name="pref_alsa_card" id="alsa_card">
+				[% FOREACH card IN alsa_cards %]
+					<option value="[% card.id | html %]" [% IF prefs.alsa_card == card.id %]selected[% END %]>
+						[% card.name | html %] ([% card.id | html %])[% IF card.rates %] - [% card.rates %][% END %][% IF card.formats %] - [% card.formats %][% END %]
+					</option>
+				[% END %]
+			</select>
+		[% END %]
+		
+		[% WRAPPER settingGroup title="PLAYCONFIG_DSD_BASE" desc="" %]
+			<select class="stdedit" name="pref_dsd_base" id="dsd_base">
+				<option value="44100" [% IF prefs.dsd_base == 44100 %]selected[% END %]>44100</option>
+				<option value="48000" [% IF prefs.dsd_base == 48000 %]selected[% END %]>48000</option>
+			</select>
+		[% END %]
+		
+		[% WRAPPER settingGroup title="PLAYCONFIG_USE_MMAP" desc="" %]
+			<input type="checkbox" class="stdedit" name="pref_use_mmap" id="use_mmap" value="1" [% IF prefs.use_mmap %]checked[% END %]>
+		[% END %]
+		
+		[% WRAPPER settingGroup title="PLAYCONFIG_PHASE" desc="" %]
+			<input type="number" class="stdedit" name="pref_phase" id="phase" value="[% prefs.phase | html %]" min="0" max="100">
+		[% END %]
+		
+		[% WRAPPER settingGroup title="PLAYCONFIG_EXTREME_MODE" desc="" %]
+			<input type="checkbox" class="stdedit" name="pref_extreme_mode" id="extreme_mode" value="1" [% IF prefs.extreme_mode %]checked[% END %]>
+		[% END %]
+	[% END %]
+
+[% PROCESS settings/footer.html %]

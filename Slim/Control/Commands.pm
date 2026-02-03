@@ -3682,6 +3682,154 @@ sub _showCommand_done {
 	$request->setStatusDone();
 }
 
+sub playconfigCommand {
+	my $request = shift;
+
+	if ($request->isNotCommand([['playconfig']])) {
+		$request->setStatusBadDispatch();
+		return;
+	}
+
+	my $action = $request->getParam('_action') || 'get';
+	my $CONFIG_FILE = '/var/lib/squeezeboxserver/play_config.json';
+
+	if ($action eq 'getalsacards') {
+
+		# Get available ALSA cards
+		my @cards;
+		
+		# Try to get ALSA cards using aplay -l
+		my $aplay_output = `aplay -l 2>/dev/null`;
+		
+		if ($aplay_output) {
+			my %seen_cards;
+			
+			# Parse aplay -l output
+			while ($aplay_output =~ /^card (\d+): (\w+) \[([^\]]+)\]/gm) {
+				my ($card_num, $card_id, $card_name) = ($1, $2, $3);
+				
+				next if $seen_cards{$card_id};
+				$seen_cards{$card_id} = 1;
+				
+				push @cards, {
+					id => "hw:$card_num,0",
+					name => $card_name,
+				};
+			}
+		}
+		
+		# Add default card as first option
+		unshift @cards, {
+			id => 'default',
+			name => 'System Default',
+		};
+		
+		# Return cards as JSON string for easier parsing
+		$request->addResult('cards_json', encode_json(\@cards));
+		$request->addResult('count', scalar(@cards));
+		
+		$request->setStatusDone();
+		return;
+	}
+
+	if ($action eq 'get') {
+		# Load and return current config
+		my $config;
+		
+		if (-e $CONFIG_FILE && -r $CONFIG_FILE) {
+			eval {
+				open my $fh, '<', $CONFIG_FILE or die $!;
+				local $/;
+				my $json = <$fh>;
+				close $fh;
+				$config = decode_json($json);
+			};
+			
+			if ($@) {
+				$log->error("Failed to load play_config.json: $@");
+				$request->setStatusBadConfig();
+				return;
+			}
+		} else {
+			# Return defaults if file doesn't exist
+			$config = {
+				dsd_rate => 256,
+				dsd_convert => 1,
+				dsd_native => 1,
+				alsa_card => 'H20',
+				dsd_base => 48000,
+				use_mmap => 1,
+				phase => 37,
+				extreme_mode => 0,
+			};
+		}
+		
+		# Add results to response
+		foreach my $key (keys %$config) {
+			$request->addResult($key, $config->{$key});
+		}
+		
+	} elsif ($action eq 'set') {
+		# Update configuration
+		my $config = {};
+		
+		# Load existing config first
+		if (-e $CONFIG_FILE && -r $CONFIG_FILE) {
+			eval {
+				open my $fh, '<', $CONFIG_FILE or die $!;
+				local $/;
+				my $json = <$fh>;
+				close $fh;
+				$config = decode_json($json);
+			};
+			
+			if ($@) {
+				$log->warn("Failed to load existing play_config.json, using defaults: $@");
+				$config = {};
+			}
+		}
+		
+		# Get all parameters using tagged param access
+		# With hasTags=1 in dispatch, params like "dsd_rate:512" are automatically
+		# parsed and accessible via getParam('dsd_rate')
+		my @config_keys = qw(dsd_rate dsd_convert dsd_native alsa_card dsd_base use_mmap phase extreme_mode);
+		
+		foreach my $key (@config_keys) {
+			my $value = $request->getParam($key);
+			if (defined $value) {
+				# Convert to int for numeric params
+				if ($key ne 'alsa_card') {
+					$value = int($value);
+				}
+				$config->{$key} = $value;
+				$log->info("Setting $key = $value");
+			}
+		}
+		
+		# Save config
+		eval {
+			my $json = encode_json($config);
+			open my $fh, '>', $CONFIG_FILE or die "Cannot open $CONFIG_FILE: $!";
+			print $fh $json;
+			close $fh;
+			chmod 0644, $CONFIG_FILE;
+		};
+		
+		if ($@) {
+			$log->error("Failed to save play_config.json: $@");
+			$request->setStatusBadConfig();
+			return;
+		}
+		
+		# Return updated config
+		foreach my $key (keys %$config) {
+			$request->addResult($key, $config->{$key});
+		}
+	}
+
+	$request->setStatusDone();
+}
+
 =head1 SEE ALSO
 
 L<Slim::Control::Request.pm>

@@ -24048,3 +24048,46 @@ FIRST_N_ALBUMS
 	HU	(első %s album)
 	NL	(eerste %s albums)
 	ZH_CN	(前%s张专辑)
+PLAY_CONFIG_SETTINGS
+	EN	Play Configuration Settings
+	DE	Wiedergabekonfiguration
+
+SETUP_PLAYCONFIG_SAVED
+	EN	Play configuration saved successfully
+	DE	Wiedergabekonfiguration erfolgreich gespeichert
+
+SETUP_PLAYCONFIG_ERROR
+	EN	Error saving play configuration
+	DE	Fehler beim Speichern der Wiedergabekonfiguration
+
+PLAYCONFIG_DSD_RATE
+	EN	DSD Rate
+	DE	DSD-Rate
+
+PLAYCONFIG_DSD_CONVERT
+	EN	DSD Convert
+	DE	DSD-Konvertierung
+
+PLAYCONFIG_DSD_NATIVE
+	EN	DSD Native
+	DE	DSD nativ
+
+PLAYCONFIG_ALSA_CARD
+	EN	ALSA Card
+	DE	ALSA-Karte
+
+PLAYCONFIG_DSD_BASE
+	EN	DSD Base Frequency
+	DE	DSD-Basisfrequenz
+
+PLAYCONFIG_USE_MMAP
+	EN	Use MMAP
+	DE	MMAP verwenden
+
+PLAYCONFIG_PHASE
+	EN	Phase
+	DE	Phase
+
+PLAYCONFIG_EXTREME_MODE
+	EN	Extreme Mode
+	DE	Extremmodus

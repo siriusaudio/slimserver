@@ -35,6 +35,7 @@ sub initSetup {
 		Index
 		Network
 		Performance
+		PlayConfig
 		Plugins
 		Security
 		Software
