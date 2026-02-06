@@ -3714,6 +3714,7 @@ sub playconfigCommand {
 				push @cards, {
 					id => "hw:$card_num,0",
 					name => $card_name,
+					shortId => $card_id,
 				};
 			}
 		}
