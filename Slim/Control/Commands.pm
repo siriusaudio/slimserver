@@ -3755,14 +3755,22 @@ sub playconfigCommand {
 			# Return defaults if file doesn't exist
 			$config = {
 				dsd_rate => 256,
-				dsd_convert => 1,
-				dsd_native => 1,
+				conversion_method => 'DSD',
+				pcm_conversion_rate => 48000,
 				alsa_card => 'H20',
 				dsd_base => 48000,
 				use_mmap => 1,
 				phase => 37,
 				extreme_mode => 0,
 			};
+		}
+
+		if (exists $config->{convert_options} && !exists $config->{conversion_method}) {
+			$config->{conversion_method} = delete $config->{convert_options};
+		}
+
+		if (exists $config->{pcm_rate} && !exists $config->{pcm_conversion_rate}) {
+			$config->{pcm_conversion_rate} = delete $config->{pcm_rate};
 		}
 		
 		# Add results to response
@@ -3793,17 +3801,33 @@ sub playconfigCommand {
 		# Get all parameters using tagged param access
 		# With hasTags=1 in dispatch, params like "dsd_rate:512" are automatically
 		# parsed and accessible via getParam('dsd_rate')
-		my @config_keys = qw(dsd_rate dsd_convert dsd_native alsa_card dsd_base use_mmap phase extreme_mode);
+		my @config_keys = qw(dsd_rate conversion_method pcm_conversion_rate alsa_card dsd_base use_mmap phase extreme_mode);
 		
 		foreach my $key (@config_keys) {
 			my $value = $request->getParam($key);
 			if (defined $value) {
 				# Convert to int for numeric params
-				if ($key ne 'alsa_card') {
+				if ($key ne 'alsa_card' && $key ne 'conversion_method') {
 					$value = int($value);
 				}
 				$config->{$key} = $value;
 				$log->info("Setting $key = $value");
+			}
+		}
+
+			if (!defined $config->{conversion_method}) {
+				my $legacy_convert_options = $request->getParam('convert_options');
+				if (defined $legacy_convert_options) {
+					$config->{conversion_method} = $legacy_convert_options;
+					$log->info("Setting conversion_method = $config->{conversion_method} (from convert_options)");
+				}
+			}
+
+		if (!defined $config->{pcm_conversion_rate}) {
+			my $legacy_pcm_rate = $request->getParam('pcm_rate');
+			if (defined $legacy_pcm_rate) {
+				$config->{pcm_conversion_rate} = int($legacy_pcm_rate);
+				$log->info("Setting pcm_conversion_rate = $config->{pcm_conversion_rate} (from pcm_rate)");
 			}
 		}
 		

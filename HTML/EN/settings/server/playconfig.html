@@ -11,12 +11,26 @@
 			</select>
 		[% END %]
 		
-		[% WRAPPER settingGroup title="PLAYCONFIG_DSD_CONVERT" desc="" %]
-			<input type="checkbox" class="stdedit" name="pref_dsd_convert" id="dsd_convert" value="1" [% IF prefs.dsd_convert %]checked[% END %]>
+		[% WRAPPER settingGroup title="PLAYCONFIG_CONVERSION_METHOD" desc="" %]
+			<select class="stdedit" name="pref_conversion_method" id="conversion_method">
+				<option value="Original" [% IF prefs.conversion_method == 'Original' %]selected[% END %]>Original</option>
+				<option value="PCM" [% IF prefs.conversion_method == 'PCM' %]selected[% END %]>PCM</option>
+				<option value="DSD" [% IF prefs.conversion_method == 'DSD' %]selected[% END %]>DSD</option>
+				<option value="DoP" [% IF prefs.conversion_method == 'DoP' %]selected[% END %]>DoP</option>
+			</select>
 		[% END %]
-		
-		[% WRAPPER settingGroup title="PLAYCONFIG_DSD_NATIVE" desc="" %]
-			<input type="checkbox" class="stdedit" name="pref_dsd_native" id="dsd_native" value="1" [% IF prefs.dsd_native %]checked[% END %]>
+
+		[% WRAPPER settingGroup title="PLAYCONFIG_PCM_CONVERSION_RATE" desc="" %]
+			<select class="stdedit" name="pref_pcm_conversion_rate" id="pcm_conversion_rate">
+				<option value="44100" [% IF prefs.pcm_conversion_rate == 44100 %]selected[% END %]>44100</option>
+				<option value="48000" [% IF prefs.pcm_conversion_rate == 48000 %]selected[% END %]>48000</option>
+				<option value="88200" [% IF prefs.pcm_conversion_rate == 88200 %]selected[% END %]>88200</option>
+				<option value="96000" [% IF prefs.pcm_conversion_rate == 96000 %]selected[% END %]>96000</option>
+				<option value="176400" [% IF prefs.pcm_conversion_rate == 176400 %]selected[% END %]>176400</option>
+				<option value="192000" [% IF prefs.pcm_conversion_rate == 192000 %]selected[% END %]>192000</option>
+				<option value="352800" [% IF prefs.pcm_conversion_rate == 352800 %]selected[% END %]>352800</option>
+				<option value="384000" [% IF prefs.pcm_conversion_rate == 384000 %]selected[% END %]>384000</option>
+			</select>
 		[% END %]
 		
 		[% WRAPPER settingGroup title="PLAYCONFIG_ALSA_CARD" desc="" %]

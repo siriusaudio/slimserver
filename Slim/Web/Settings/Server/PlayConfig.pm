@@ -35,8 +35,8 @@ sub handler {
 		
 		my $config = {
 			dsd_rate => int($paramRef->{'pref_dsd_rate'} || 256),
-			dsd_convert => int($paramRef->{'pref_dsd_convert'} || 0),
-			dsd_native => int($paramRef->{'pref_dsd_native'} || 0),
+			conversion_method => $paramRef->{'pref_conversion_method'} || 'Original',
+			pcm_conversion_rate => int($paramRef->{'pref_pcm_conversion_rate'} || 48000),
 			alsa_card => $paramRef->{'pref_alsa_card'} || 'default',
 			dsd_base => int($paramRef->{'pref_dsd_base'} || 48000),
 			use_mmap => int($paramRef->{'pref_use_mmap'} || 0),
@@ -54,8 +54,8 @@ sub handler {
 	# Load current config
 	my $config = _loadConfig();
 	$paramRef->{'prefs'}->{'dsd_rate'} = $config->{'dsd_rate'};
-	$paramRef->{'prefs'}->{'dsd_convert'} = $config->{'dsd_convert'};
-	$paramRef->{'prefs'}->{'dsd_native'} = $config->{'dsd_native'};
+	$paramRef->{'prefs'}->{'conversion_method'} = $config->{'conversion_method'};
+	$paramRef->{'prefs'}->{'pcm_conversion_rate'} = $config->{'pcm_conversion_rate'};
 	$paramRef->{'prefs'}->{'alsa_card'} = $config->{'alsa_card'};
 	$paramRef->{'prefs'}->{'dsd_base'} = $config->{'dsd_base'};
 	$paramRef->{'prefs'}->{'use_mmap'} = $config->{'use_mmap'};
@@ -83,16 +83,26 @@ sub _loadConfig {
 	}
 	
 	# Return defaults if file doesn't exist or failed to load
-	return $config || {
+	$config ||= {
 		dsd_rate => 256,
-		dsd_convert => 1,
-		dsd_native => 1,
+		conversion_method => 'DSD',
+		pcm_conversion_rate => 48000,
 		alsa_card => 'H20',
 		dsd_base => 48000,
 		use_mmap => 1,
 		phase => 37,
 		extreme_mode => 0,
 	};
+
+	if (exists $config->{convert_options} && !exists $config->{conversion_method}) {
+		$config->{conversion_method} = delete $config->{convert_options};
+	}
+
+	if (exists $config->{pcm_rate} && !exists $config->{pcm_conversion_rate}) {
+		$config->{pcm_conversion_rate} = delete $config->{pcm_rate};
+	}
+
+	return $config;
 }
 
 sub _saveConfig {
