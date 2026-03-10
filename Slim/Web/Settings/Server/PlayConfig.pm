@@ -87,7 +87,7 @@ sub _loadConfig {
 		dsd_rate => 256,
 		conversion_method => 'DSD',
 		pcm_conversion_rate => 48000,
-		alsa_card => 'H20',
+		alsa_card => 'hw:2,0',
 		dsd_base => 48000,
 		use_mmap => 1,
 		phase => 37,
@@ -136,8 +136,8 @@ sub _getAlsaCards {
 		while ($aplay_output =~ /^card (\d+): (\w+) \[([^\]]+)\]/gm) {
 			my ($card_num, $card_id, $card_name) = ($1, $2, $3);
 			
-			next if $seen_cards{$card_id};
-			$seen_cards{$card_id} = 1;
+			next if $seen_cards{$card_num};
+			$seen_cards{$card_num} = 1;
 			
 			# Get card capabilities using aplay -D
 			my $rates = '';
@@ -182,8 +182,9 @@ sub _getAlsaCards {
 			};
 			
 			push @cards, {
-				id => $card_id,
+				id => "hw:$card_num,0",
 				name => $card_name,
+				shortId => $card_id,
 				rates => $rates,
 				formats => $formats,
 			};
