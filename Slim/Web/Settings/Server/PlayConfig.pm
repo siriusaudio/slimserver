@@ -118,6 +118,28 @@ sub _saveConfig {
 		return 0;
 	}
 	
+	# Restart backend services after saving config
+	$log->info("Restarting backend services after play_config save");
+	
+	# Stop listener services
+	my $ret1 = system('sudo', '-n', 'systemctl', 'stop', 'sirius_listen_native.service');
+	if ($ret1 != 0) {
+		$log->warn("Failed to stop sirius_listen_native.service: exit code $ret1");
+	}
+	
+	my $ret2 = system('sudo', '-n', 'systemctl', 'stop', 'sirius_listen_pcm.service');
+	if ($ret2 != 0) {
+		$log->warn("Failed to stop sirius_listen_pcm.service: exit code $ret2");
+	}
+	
+	# Restart player service
+	my $ret3 = system('sudo', '-n', 'systemctl', 'restart', 'sirius_player.service');
+	if ($ret3 != 0) {
+		$log->warn("Failed to restart sirius_player.service: exit code $ret3");
+	}
+	
+	$log->info("Backend service restart completed");
+	
 	return 1;
 }
 
