@@ -145,17 +145,17 @@ sub _saveConfig {
 
 sub _getAlsaCards {
 	my @cards;
+	my %seen_cards;
 	
 	# Try to get ALSA cards using aplay -l
-	my $aplay_output = `aplay -l 2>/dev/null`;
+	my $aplay_cmd = -x '/usr/bin/aplay' ? '/usr/bin/aplay' : 'aplay';
+	my $aplay_output = `$aplay_cmd -l 2>/dev/null`;
 	
 	if ($aplay_output) {
-		my %seen_cards;
-		
 		# Parse aplay -l output
 		# Format: card 0: PCH [HDA Intel PCH], device 0: ALC257 Analog [ALC257 Analog]
 		# or: card 2: H20 [HU300 HiFi 2.0], device 0: USB Audio [USB Audio]
-		while ($aplay_output =~ /^card (\d+): (\w+) \[([^\]]+)\]/gm) {
+		while ($aplay_output =~ /^card\s+(\d+):\s+([^\s\[]+)\s+\[([^\]]+)\]/gm) {
 			my ($card_num, $card_id, $card_name) = ($1, $2, $3);
 			
 			next if $seen_cards{$card_num};
@@ -211,6 +211,30 @@ sub _getAlsaCards {
 				formats => $formats,
 			};
 		}
+	}
+
+	# Fallback: read /proc/asound/cards if aplay output is not available or parsing failed.
+	if (!@cards && open my $fh, '<', '/proc/asound/cards') {
+		while (my $line = <$fh>) {
+			if ($line =~ /^\s*(\d+)\s+\[([^\]]+)\]\s*:\s*(.+)$/) {
+				my ($card_num, $card_id, $rest) = ($1, $2, $3);
+				next if $seen_cards{$card_num};
+				$seen_cards{$card_num} = 1;
+
+				$card_id =~ s/\s+//g;
+				my $card_name = $rest;
+				$card_name =~ s/^.*?\s-\s//;
+
+				push @cards, {
+					id => "hw:$card_num,0",
+					name => $card_name,
+					shortId => $card_id,
+					rates => '',
+					formats => '',
+				};
+			}
+		}
+		close $fh;
 	}
 	
 	# Add default card if no cards found or as first option
