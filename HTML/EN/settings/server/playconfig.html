@@ -53,6 +53,14 @@
 		[% WRAPPER settingGroup title="PLAYCONFIG_USE_MMAP" desc="" %]
 			<input type="checkbox" class="stdedit" name="pref_use_mmap" id="use_mmap" value="1" [% IF prefs.use_mmap %]checked[% END %]>
 		[% END %]
+
+		[% WRAPPER settingGroup title="PLAYCONFIG_USE_VOLUME" desc="" %]
+			<input type="checkbox" class="stdedit" name="pref_use_volume" id="use_volume" value="1" [% IF prefs.use_volume %]checked[% END %]>
+		[% END %]
+
+		[% WRAPPER settingGroup title="PLAYCONFIG_HOLD_AUDIO_DEVICE" desc="" %]
+			<input type="checkbox" class="stdedit" name="pref_hold_audio_device" id="hold_audio_device" value="1" [% IF prefs.hold_audio_device %]checked[% END %]>
+		[% END %]
 		
 		[% WRAPPER settingGroup title="PLAYCONFIG_PHASE" desc="" %]
 			<input type="number" class="stdedit" name="pref_phase" id="phase" value="[% prefs.phase | html %]" min="0" max="100">

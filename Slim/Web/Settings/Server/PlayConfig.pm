@@ -40,6 +40,8 @@ sub handler {
 			alsa_card => $paramRef->{'pref_alsa_card'} || 'default',
 			dsd_base => int($paramRef->{'pref_dsd_base'} || 48000),
 			use_mmap => int($paramRef->{'pref_use_mmap'} || 0),
+			use_volume => int($paramRef->{'pref_use_volume'} || 0),
+			hold_audio_device => int($paramRef->{'pref_hold_audio_device'} || 0),
 			phase => $phase,
 			extreme_mode => int($paramRef->{'pref_extreme_mode'} || 0),
 		};
@@ -59,6 +61,8 @@ sub handler {
 	$paramRef->{'prefs'}->{'alsa_card'} = $config->{'alsa_card'};
 	$paramRef->{'prefs'}->{'dsd_base'} = $config->{'dsd_base'};
 	$paramRef->{'prefs'}->{'use_mmap'} = $config->{'use_mmap'};
+	$paramRef->{'prefs'}->{'use_volume'} = $config->{'use_volume'};
+	$paramRef->{'prefs'}->{'hold_audio_device'} = $config->{'hold_audio_device'};
 	$paramRef->{'prefs'}->{'phase'} = $config->{'phase'};
 	$paramRef->{'prefs'}->{'extreme_mode'} = $config->{'extreme_mode'};
 
@@ -90,6 +94,8 @@ sub _loadConfig {
 		alsa_card => 'hw:2,0',
 		dsd_base => 48000,
 		use_mmap => 1,
+		use_volume => 0,
+		hold_audio_device => 0,
 		phase => 37,
 		extreme_mode => 0,
 	};
