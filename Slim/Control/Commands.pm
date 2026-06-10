@@ -3823,7 +3823,7 @@ sub playconfigCommand {
 		# Get all parameters using tagged param access
 		# With hasTags=1 in dispatch, params like "dsd_rate:512" are automatically
 		# parsed and accessible via getParam('dsd_rate')
-		my @config_keys = qw(dsd_rate conversion_method pcm_conversion_rate alsa_card dsd_base use_mmap phase extreme_mode);
+		my @config_keys = qw(dsd_rate conversion_method pcm_conversion_rate alsa_card dsd_base use_mmap phase extreme_mode use_volume hold_audio_device);
 		
 		foreach my $key (@config_keys) {
 			my $value = $request->getParam($key);
