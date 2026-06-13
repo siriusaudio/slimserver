@@ -24085,7 +24085,7 @@ PLAYCONFIG_USE_MMAP
 	DE	MMAP verwenden
 
 PLAYCONFIG_USE_VOLUME
-	EN	Use Volume from Play Command
+	EN	Fix volume at 100%
 	DE	Lautstaerke aus Play-Befehl verwenden
 
 PLAYCONFIG_HOLD_AUDIO_DEVICE
