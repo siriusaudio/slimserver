@@ -58,6 +58,8 @@ sub modelName { 'Squeezeslave' }
 
 sub hasIR { 1 }
 
+sub maxSupportedSamplerate { 0 }
+
 # in order of preference based on whether we're connected via wired or wireless...
 sub formats {
 	my $client = shift;
