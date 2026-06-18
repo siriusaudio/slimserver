@@ -3897,11 +3897,16 @@ sub playconfigCommand {
 		if ($ret2 != 0) {
 			$log->warn("Failed to stop sirius_listen_pcm.service: exit code $ret2");
 		}
+
+		my $ret3 = system('sudo', '-n', 'systemctl', 'stop', 'sirius_listen_dop.service');
+		if ($ret3 != 0) {
+			$log->warn("Failed to stop sirius_listen_dop.service: exit code $ret3");
+		}
 		
 		# Restart player service
-		my $ret3 = system('sudo', '-n', 'systemctl', 'restart', 'sirius_player.service');
-		if ($ret3 != 0) {
-			$log->warn("Failed to restart sirius_player.service: exit code $ret3");
+		my $ret4 = system('sudo', '-n', 'systemctl', 'restart', 'sirius_player.service');
+		if ($ret4 != 0) {
+			$log->warn("Failed to restart sirius_player.service: exit code $ret4");
 		}
 		
 		$log->info("Backend service restart completed");
