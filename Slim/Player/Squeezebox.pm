@@ -181,7 +181,7 @@ sub play {
 	}
 	logError("decoded: $decoded");
 
-	my $gain = ($client->volume() - 100);
+	my $gain = $client->volume();
 	system("echo \"0\" > /var/lib/squeezeboxserver/.slimnotif");
         my %rec_hash = ('command'=>"play", 'url'=>$params->{url}, 'skip'=>$seekdata,'volume'=>$gain);
         my $json = encode_json \%rec_hash;
