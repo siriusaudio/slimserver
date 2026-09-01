@@ -46,7 +46,7 @@ sub handler {
 			extreme_mode => int($paramRef->{'pref_extreme_mode'} || 0),
 		};
 
-		if (_saveConfig($config)) {
+		if (_saveConfig($config, $client)) {
 			$paramRef->{'warning'} = '<span id="popupWarning">' . Slim::Utils::Strings::string("SETUP_PLAYCONFIG_SAVED") . '</span>';
 		} else {
 			$paramRef->{'warning'} = '<span id="popupError">' . Slim::Utils::Strings::string("SETUP_PLAYCONFIG_ERROR") . '</span>';
@@ -116,7 +116,7 @@ sub _loadConfig {
 }
 
 sub _saveConfig {
-	my $config = shift;
+	my ($config, $client) = @_;
 	
 	eval {
 		my $json = encode_json($config);
@@ -130,6 +130,10 @@ sub _saveConfig {
 	
 	# Restart backend services after saving config
 	$log->info("Restarting backend services after play_config save");
+
+	if ($client) {
+		Slim::Control::Request::executeRequest($client, ['stop']);
+	}
 	
 	# Stop listener services
 	my $ret1 = system('sudo', '-n', 'systemctl', 'stop', 'sirius_listen_native.service');

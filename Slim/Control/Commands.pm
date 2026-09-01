@@ -3883,6 +3883,10 @@ sub playconfigCommand {
 			$request->setStatusBadConfig();
 			return;
 		}
+
+		if (my $client = $request->client()) {
+			Slim::Control::Request::executeRequest($client, ['stop']);
+		}
 		
 		# Restart backend services after saving config
 		$log->info("Restarting backend services after play_config save");
