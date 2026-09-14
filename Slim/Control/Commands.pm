@@ -3800,6 +3800,10 @@ sub playconfigCommand {
 		if (exists $config->{use_volume} && !exists $config->{fix_volume}) {
 			$config->{fix_volume} = delete $config->{use_volume};
 		}
+
+		if (exists $config->{dsd_base} && defined $config->{dsd_base} && $config->{dsd_base} =~ /^(?:auto|automatic)$/i) {
+			$config->{dsd_base} = 'Automatic';
+		}
 		
 		# Add results to response
 		foreach my $key (keys %$config) {
@@ -3834,8 +3838,16 @@ sub playconfigCommand {
 		foreach my $key (@config_keys) {
 			my $value = $request->getParam($key);
 			if (defined $value) {
-				# Convert to int for numeric params
-				if ($key ne 'alsa_card' && $key ne 'conversion_method') {
+				# Convert to int for numeric params, except dsd_base which supports Automatic
+				if ($key eq 'dsd_base') {
+					if ($value =~ /^(?:auto|automatic)$/i) {
+						$value = 'Automatic';
+					} elsif ($value =~ /^\d+$/) {
+						$value = int($value);
+					} else {
+						$value = 48000;
+					}
+				} elsif ($key ne 'alsa_card' && $key ne 'conversion_method') {
 					$value = int($value);
 				}
 				$config->{$key} = $value;

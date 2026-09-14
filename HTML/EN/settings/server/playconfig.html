@@ -45,6 +45,7 @@
 		
 		[% WRAPPER settingGroup title="PLAYCONFIG_DSD_BASE" desc="" %]
 			<select class="stdedit" name="pref_dsd_base" id="dsd_base">
+				<option value="Automatic" [% IF prefs.dsd_base == 'Automatic' || prefs.dsd_base == 'automatic' || prefs.dsd_base == 'AUTO' || prefs.dsd_base == 'auto' %]selected[% END %]>Automatic</option>
 				<option value="44100" [% IF prefs.dsd_base == 44100 %]selected[% END %]>44100</option>
 				<option value="48000" [% IF prefs.dsd_base == 48000 %]selected[% END %]>48000</option>
 			</select>

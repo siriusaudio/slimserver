@@ -28,6 +28,16 @@ sub handler {
 	my ($class, $client, $paramRef) = @_;
 
 	if ($paramRef->{'saveSettings'}) {
+		my $dsd_base_pref = $paramRef->{'pref_dsd_base'};
+		my $dsd_base = 48000;
+		if (defined $dsd_base_pref) {
+			if ($dsd_base_pref =~ /^(?:auto|automatic)$/i) {
+				$dsd_base = 'Automatic';
+			} elsif ($dsd_base_pref =~ /^\d+$/) {
+				$dsd_base = int($dsd_base_pref);
+			}
+		}
+
 		# Validate and clamp phase to 0-100 range
 		my $phase = int($paramRef->{'pref_phase'} || 0);
 		$phase = 0 if $phase < 0;
@@ -38,7 +48,7 @@ sub handler {
 			conversion_method => $paramRef->{'pref_conversion_method'} || 'Original',
 			pcm_conversion_rate => int($paramRef->{'pref_pcm_conversion_rate'} || 48000),
 			alsa_card => $paramRef->{'pref_alsa_card'} || 'default',
-			dsd_base => int($paramRef->{'pref_dsd_base'} || 48000),
+			dsd_base => $dsd_base,
 			use_mmap => int($paramRef->{'pref_use_mmap'} || 0),
 			fix_volume => int($paramRef->{'pref_fix_volume'} || 0),
 			hold_audio_device => int($paramRef->{'pref_hold_audio_device'} || 0),
@@ -110,6 +120,10 @@ sub _loadConfig {
 
 	if (exists $config->{use_volume} && !exists $config->{fix_volume}) {
 		$config->{fix_volume} = delete $config->{use_volume};
+	}
+
+	if (exists $config->{dsd_base} && defined $config->{dsd_base} && $config->{dsd_base} =~ /^(?:auto|automatic)$/i) {
+		$config->{dsd_base} = 'Automatic';
 	}
 
 	return $config;
