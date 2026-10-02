@@ -1150,12 +1150,29 @@ sub streamingProgressBar {
 
 	Slim::Music::Info::updateCacheEntry( $url, \%cacheEntry );
 
-	Slim::Music::Info::setDuration( $url, $secs );
+	# Prefer the real track duration from metadata. After a mid/late seek, Content-Length
+	# is only the remaining body; using that as duration collapses the seeker (e.g. seek
+	# to "30s before end" → duration becomes ~30s and time clamps there).
+	my $metaSecs;
+	if ( my $song = $client->streamingSong() || $client->playingSong() ) {
+		if ( my $track = $song->currentTrack() ) {
+			$metaSecs = Slim::Music::Info::getDuration( $track->url );
+		}
+		my $existing = $song->_duration();
+		if ( $metaSecs && $metaSecs > 0 && ( !$secs || $secs < ( $metaSecs * 0.9 ) ) ) {
+			$secs = $metaSecs;
+		}
+		elsif ( $existing && $existing > 0 && ( !$secs || $secs < ( $existing * 0.9 ) ) ) {
+			$secs = $existing;
+		}
+	}
+
+	Slim::Music::Info::setDuration( $url, $secs ) if $secs;
 
 	# Set the duration so the progress bar appears
 	if ( my $song = $client->streamingSong()) {
 
-		$song->duration($secs);
+		$song->duration($secs) if $secs;
 
 		if ( main::INFOLOG && $log->is_info ) {
 			if ( $duration ) {

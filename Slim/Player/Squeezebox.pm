@@ -40,8 +40,6 @@ use constant TRANSITION_FADEOUT   => 3;
 use constant TRANSITION_FADEINOUT => 4;
 use constant TRANSITION_CROSSFADE_IMMEDIATE => 5;
 
-use JSON;
-
 # We inherit new() completely from our parent class.
 
 sub modelName { 'Squeezebox' }
@@ -153,43 +151,14 @@ sub ticspersec {
 }
 
 sub play {
-	logError("play enter");
+	# SlimProto client (sirius slimproto_stream_bridge) owns play_command.json.
+	# LMS only sends strm over SlimProto; the bridge resolves the track path via CLI
+	# and drives the Sirius audio engine through play_command.json.
+	logError("play enter (slimproto-owned play_command)");
 	my $client = shift;
 	my $params = shift;
 	my $controller = $params->{'controller'};
 	my $handler = $controller->currentTrackHandler();
-	
-
-	use URI::Encode qw(uri_encode uri_decode);
-	use Time::HiRes qw(usleep nanosleep);
-        my $decoded = uri_decode($params->{url});
-	$decoded =~ s/\&/\\&/g;
-	$decoded =~ s/\'/\\'/g;
-	$decoded =~ s/\s/\\ /g;
-	$decoded =~ s/\(/\\\(/g;
-	$decoded =~ s/\./\\./g;
-	$decoded =~ s/\)/\\\)/g;
-	$decoded =~ s/\?/\\?/g;
-	$decoded =~ s/file:\/\///g;
-
-	my $seekdata = 0;
-	my $seekd = $controller->song->seekdata;
-	if (defined $seekd && $seekd ne '') {
-		
-		my %seekd = %$seekd;
-		$seekdata = $seekd{timeOffset};
-	}
-	logError("decoded: $decoded");
-
-	my $gain = $client->volume();
-	system("echo \"0\" > /var/lib/squeezeboxserver/.slimnotif");
-        my %rec_hash = ('command'=>"play", 'url'=>$params->{url}, 'skip'=>$seekdata,'volume'=>$gain);
-        my $json = encode_json \%rec_hash;
-        open(my $json_out, ">", '/var/lib/squeezeboxserver/play_command.json');
-        print {$json_out} $json;
-        logError("json done");
-	system("inotifywait -t 10 /var/lib/squeezeboxserver/.slimnotif");
-	logError("squeezelite goes");
 
 	# Calculate the correct buffer threshold for remote URLs
 	if ( $handler->isRemote() ) {
@@ -230,18 +199,7 @@ sub play {
 # pause
 #
 sub pause {
-	
-	logError("pause called");
-	my $client = shift;
-	system("echo \"0\" > /var/lib/squeezeboxserver/.slimnotif");
-
-	my %rec_hash = ('command'=>"pause");
-	my $json = encode_json \%rec_hash;
-	open(my $json_out, ">", '/var/lib/squeezeboxserver/play_command.json');
-	print {$json_out} $json;
-
-	system("inotifywait -t 10 /var/lib/squeezeboxserver/.slimnotif");
-
+	logError("pause called (slimproto-owned play_command)");
 	my $client = shift;
 	$client->stream('p');
 	$client->playPoint(undef);
@@ -250,19 +208,8 @@ sub pause {
 }
 
 sub stop {
-
-	logError("stop called");
-	
+	logError("stop called (slimproto-owned play_command)");
 	my $client = shift;
-	system("echo \"0\" > /var/lib/squeezeboxserver/.slimnotif");
-
-	my %rec_hash = ('command'=>"stop");
-	my $json = encode_json \%rec_hash;
-	open(my $json_out, ">", '/var/lib/squeezeboxserver/play_command.json');
-	print {$json_out} $json;
-
-	system("inotifywait -t 10 /var/lib/squeezeboxserver/.slimnotif");
-
 	$client->stream('q');
 	$client->playPoint(undef);
 	Slim::Networking::Slimproto::stop($client);
