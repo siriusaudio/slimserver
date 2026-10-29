@@ -42,19 +42,19 @@ sub handler {
 		my $phase = int($paramRef->{'pref_phase'} || 0);
 		$phase = 0 if $phase < 0;
 		$phase = 100 if $phase > 100;
-		
-		my $config = {
-			dsd_rate => int($paramRef->{'pref_dsd_rate'} || 256),
-			conversion_method => $paramRef->{'pref_conversion_method'} || 'Original',
-			pcm_conversion_rate => int($paramRef->{'pref_pcm_conversion_rate'} || 48000),
-			alsa_card => $paramRef->{'pref_alsa_card'} || 'default',
-			dsd_base => $dsd_base,
-			use_mmap => int($paramRef->{'pref_use_mmap'} || 0),
-			fix_volume => int($paramRef->{'pref_fix_volume'} || 0),
-			hold_audio_device => int($paramRef->{'pref_hold_audio_device'} || 0),
-			phase => $phase,
-			extreme_mode => int($paramRef->{'pref_extreme_mode'} || 0),
-		};
+
+		# Merge into existing config so remote_player_* and other keys survive.
+		my $config = _loadConfig();
+		$config->{dsd_rate} = int($paramRef->{'pref_dsd_rate'} || 256);
+		$config->{conversion_method} = $paramRef->{'pref_conversion_method'} || 'Original';
+		$config->{pcm_conversion_rate} = int($paramRef->{'pref_pcm_conversion_rate'} || 48000);
+		$config->{alsa_card} = $paramRef->{'pref_alsa_card'} || 'default';
+		$config->{dsd_base} = $dsd_base;
+		$config->{use_mmap} = int($paramRef->{'pref_use_mmap'} || 0);
+		$config->{fix_volume} = int($paramRef->{'pref_fix_volume'} || 0);
+		$config->{hold_audio_device} = int($paramRef->{'pref_hold_audio_device'} || 0);
+		$config->{phase} = $phase;
+		$config->{extreme_mode} = int($paramRef->{'pref_extreme_mode'} || 0);
 
 		if (_saveConfig($config, $client)) {
 			$paramRef->{'warning'} = '<span id="popupWarning">' . Slim::Utils::Strings::string("SETUP_PLAYCONFIG_SAVED") . '</span>';
@@ -148,6 +148,40 @@ sub _saveConfig {
 	if ($client) {
 		Slim::Control::Request::executeRequest($client, ['stop']);
 	}
+
+	# Cloud / remote DAC: stop the player listeners via control channel.
+	# Local installs keep the systemd path below.
+	if (_isRemotePlayer($config)) {
+		my $ctl = '/usr/local/bin/sirius-player-framework/server/server_control.sh';
+		if (-x $ctl) {
+			my $ret = system($ctl, 'stop');
+			if ($ret != 0) {
+				$log->warn("Failed to stop remote player via server_control: exit code $ret");
+			} else {
+				$log->info("Remote player stop sent after play_config save (alsa_card=$config->{alsa_card})");
+			}
+		} else {
+			$log->warn("Remote player configured but server_control.sh missing at $ctl");
+		}
+
+		# Live volume (fix_volume off) needs sirius_volume → mpv IPC immediately,
+		# not only on the next generate_audio_conversion_params run.
+		my $conf = '/usr/local/bin/sirius-player-framework/supervisord.conf';
+		if (-f $conf) {
+			my $fix_vol = $config->{fix_volume};
+			my $vol_off = (!defined $fix_vol || $fix_vol eq '0' || $fix_vol eq 'false' || $fix_vol eq '');
+			my @sup = ('supervisorctl', '-c', $conf, ($vol_off ? 'start' : 'stop'), 'sirius_volume');
+			my $vret = system(@sup);
+			if ($vret != 0) {
+				$log->warn("Failed to @{[$vol_off ? 'start' : 'stop']} sirius_volume: exit code $vret");
+			} else {
+				$log->info(($vol_off ? 'Started' : 'Stopped') . " sirius_volume after play_config save");
+			}
+		}
+
+		$log->info("Backend service restart completed (remote)");
+		return 1;
+	}
 	
 	# Stop listener services
 	my $ret1 = system('sudo', '-n', 'systemctl', 'stop', 'sirius_listen_native.service');
@@ -176,9 +210,92 @@ sub _saveConfig {
 	return 1;
 }
 
+sub _isRemotePlayer {
+	my ($config) = @_;
+	return 1 if $ENV{PLAYER_HOST};
+	return 1 if $config && $config->{remote_player_host};
+	return 0;
+}
+
+sub _formatRates {
+	my ($resolutions) = @_;
+	return '' unless ref($resolutions) eq 'ARRAY' && @$resolutions;
+	my @shown = map { "$_ Hz" } @$resolutions[0 .. ($#$resolutions > 2 ? 2 : $#$resolutions)];
+	my $text = join(', ', @shown);
+	$text .= '...' if @$resolutions > 3;
+	return $text;
+}
+
+sub _formatFormats {
+	my ($formats) = @_;
+	return '' unless ref($formats) eq 'ARRAY' && @$formats;
+	my %bits;
+	my @labels;
+	for my $fmt (@$formats) {
+		if ($fmt =~ /^S(\d+)/) {
+			$bits{$1} = 1;
+		} elsif ($fmt =~ /DSD/i) {
+			push @labels, $fmt unless grep { $_ eq $fmt } @labels;
+		}
+	}
+	if (keys %bits) {
+		unshift @labels, (join('/', sort { $a <=> $b } keys %bits) . '-bit');
+	}
+	return join(', ', @labels);
+}
+
+sub _getAlsaCardsFromCapabilities {
+	my $caps_file = $ENV{DEVICE_CAPS} || '/var/lib/squeezeboxserver/device_capabilities.json';
+	return () unless -e $caps_file && -r $caps_file;
+
+	my $caps;
+	eval {
+		my $json = read_file($caps_file);
+		$caps = decode_json($json);
+	};
+	if ($@) {
+		$log->warn("Failed to load device_capabilities.json: $@");
+		return ();
+	}
+
+	my $devices = $caps->{devices};
+	return () unless ref($devices) eq 'ARRAY' && @$devices;
+
+	my @cards;
+	my %seen;
+	for my $dev (@$devices) {
+		next unless ref($dev) eq 'HASH';
+		my $id = $dev->{id} || '';
+		next unless $id;
+		next if $seen{$id}++;
+		push @cards, {
+			id => $id,
+			name => $dev->{name} || $dev->{card_id} || $id,
+			shortId => $dev->{card_id} || '',
+			rates => _formatRates($dev->{resolutions}),
+			formats => _formatFormats($dev->{formats}),
+		};
+	}
+	return @cards;
+}
+
 sub _getAlsaCards {
 	my @cards;
 	my %seen_cards;
+
+	# Prefer player-advertised devices (cloud player / remote DAC).
+	# In that setup the LMS host has no local sound cards.
+	@cards = _getAlsaCardsFromCapabilities();
+	if (@cards) {
+		$log->info("Using " . scalar(@cards) . " ALSA card(s) from device_capabilities.json");
+		unshift @cards, {
+			id => 'default',
+			name => 'System Default',
+			rates => '',
+			formats => '',
+		};
+		return \@cards;
+	}
 	
 	# Try to get ALSA cards using aplay -l
 	my $aplay_cmd = -x '/usr/bin/aplay' ? '/usr/bin/aplay' : 'aplay';

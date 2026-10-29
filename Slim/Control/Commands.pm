@@ -3695,27 +3695,54 @@ sub playconfigCommand {
 
 	if ($action eq 'getalsacards') {
 
-		# Get available ALSA cards
+		# Prefer player-advertised devices (device_capabilities.json), then local aplay.
 		my @cards;
 		my %seen_cards;
-		
-		# Try to get ALSA cards using aplay -l
-		my $aplay_cmd = -x '/usr/bin/aplay' ? '/usr/bin/aplay' : 'aplay';
-		my $aplay_output = `$aplay_cmd -l 2>/dev/null`;
-		
-		if ($aplay_output) {
-			# Parse aplay -l output
-			while ($aplay_output =~ /^card\s+(\d+):\s+([^\s\[]+)\s+\[([^\]]+)\]/gm) {
-				my ($card_num, $card_id, $card_name) = ($1, $2, $3);
-				
-				next if $seen_cards{$card_num};
-				$seen_cards{$card_num} = 1;
-				
-				push @cards, {
-					id => "hw:$card_num,0",
-					name => $card_name,
-					shortId => $card_id,
-				};
+		my $caps_file = $ENV{DEVICE_CAPS} || '/var/lib/squeezeboxserver/device_capabilities.json';
+
+		if (-e $caps_file && -r $caps_file) {
+			eval {
+				open my $fh, '<', $caps_file or die $!;
+				local $/;
+				my $json = <$fh>;
+				close $fh;
+				my $caps = decode_json($json);
+				if (ref($caps->{devices}) eq 'ARRAY') {
+					for my $dev (@{$caps->{devices}}) {
+						next unless ref($dev) eq 'HASH' && $dev->{id};
+						next if $seen_cards{$dev->{id}}++;
+						push @cards, {
+							id => $dev->{id},
+							name => $dev->{name} || $dev->{card_id} || $dev->{id},
+							shortId => $dev->{card_id} || '',
+						};
+					}
+				}
+			};
+			if ($@) {
+				$log->warn("Failed to load device_capabilities.json for getalsacards: $@");
+			}
+		}
+
+		if (!@cards) {
+			# Try to get ALSA cards using aplay -l
+			my $aplay_cmd = -x '/usr/bin/aplay' ? '/usr/bin/aplay' : 'aplay';
+			my $aplay_output = `$aplay_cmd -l 2>/dev/null`;
+
+			if ($aplay_output) {
+				# Parse aplay -l output
+				while ($aplay_output =~ /^card\s+(\d+):\s+([^\s\[]+)\s+\[([^\]]+)\]/gm) {
+					my ($card_num, $card_id, $card_name) = ($1, $2, $3);
+
+					next if $seen_cards{$card_num};
+					$seen_cards{$card_num} = 1;
+
+					push @cards, {
+						id => "hw:$card_num,0",
+						name => $card_name,
+						shortId => $card_id,
+					};
+				}
 			}
 		}
 
@@ -3902,27 +3929,38 @@ sub playconfigCommand {
 		
 		# Restart backend services after saving config
 		$log->info("Restarting backend services after play_config save");
-		
-		# Stop listener services
-		my $ret1 = system('sudo', '-n', 'systemctl', 'stop', 'sirius_listen_native.service');
-		if ($ret1 != 0) {
-			$log->warn("Failed to stop sirius_listen_native.service: exit code $ret1");
-		}
-		
-		my $ret2 = system('sudo', '-n', 'systemctl', 'stop', 'sirius_listen_pcm.service');
-		if ($ret2 != 0) {
-			$log->warn("Failed to stop sirius_listen_pcm.service: exit code $ret2");
-		}
 
-		my $ret3 = system('sudo', '-n', 'systemctl', 'stop', 'sirius_listen_dop.service');
-		if ($ret3 != 0) {
-			$log->warn("Failed to stop sirius_listen_dop.service: exit code $ret3");
-		}
-		
-		# Restart player service
-		my $ret4 = system('sudo', '-n', 'systemctl', 'restart', 'sirius_player.service');
-		if ($ret4 != 0) {
-			$log->warn("Failed to restart sirius_player.service: exit code $ret4");
+		my $remote = $ENV{PLAYER_HOST} || $config->{remote_player_host};
+		if ($remote) {
+			my $ctl = '/usr/local/bin/sirius-player-framework/server/server_control.sh';
+			if (-x $ctl) {
+				my $ret = system($ctl, 'stop');
+				if ($ret != 0) {
+					$log->warn("Failed to stop remote player via server_control: exit code $ret");
+				}
+			}
+		} else {
+			# Stop listener services
+			my $ret1 = system('sudo', '-n', 'systemctl', 'stop', 'sirius_listen_native.service');
+			if ($ret1 != 0) {
+				$log->warn("Failed to stop sirius_listen_native.service: exit code $ret1");
+			}
+
+			my $ret2 = system('sudo', '-n', 'systemctl', 'stop', 'sirius_listen_pcm.service');
+			if ($ret2 != 0) {
+				$log->warn("Failed to stop sirius_listen_pcm.service: exit code $ret2");
+			}
+
+			my $ret3 = system('sudo', '-n', 'systemctl', 'stop', 'sirius_listen_dop.service');
+			if ($ret3 != 0) {
+				$log->warn("Failed to stop sirius_listen_dop.service: exit code $ret3");
+			}
+
+			# Restart player service
+			my $ret4 = system('sudo', '-n', 'systemctl', 'restart', 'sirius_player.service');
+			if ($ret4 != 0) {
+				$log->warn("Failed to restart sirius_player.service: exit code $ret4");
+			}
 		}
 		
 		$log->info("Backend service restart completed");
